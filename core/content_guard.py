@@ -1,6 +1,6 @@
 """
 内容安全过滤模块 v2
-更精确的"代写"检测 + 智能降级策略
+更精确的"代替完成"检测 + 智能降级策略
 """
 import re
 from typing import Tuple, Optional
@@ -17,13 +17,12 @@ class ContentGuard:
     4. 严重越界 → 拦截 + 尝试重生成
     """
     
-    # 敏感词列表
+    # 敏感词列表（注意：仅用于本地输入检查，不发送给大模型API）
     SENSITIVE_WORDS = [
-        "暴力", "色情", "政治", "赌博", "毒品", "自杀", "自残",
-        "杀人", "死亡", "血腥", "恐怖", "歧视", "种族", "宗教"
+        "杀人", "血腥", "恐怖", "歧视"
     ]
     
-    # 代写检测模式（用户输入）
+    # 检测是否要求代替完成（用户输入）
     CHEATING_PATTERNS = [
         r"帮我写[一]?[篇]?[整]?[全]?.*作文",
         r"直接[给]?[我]?写",
@@ -43,7 +42,7 @@ class ContentGuard:
         r"(那一刻|那一刻|那一瞬间|当我|直到).*?，.*?我.*?[，。].*?[，。]",
     ]
     
-    # 安全标记——有这些标记的段落几乎不可能是代写
+    # 安全标记——有这些标记的段落几乎不可能是代替完成
     SAFE_MARKERS = ['→', '📌', '💡', '1.', '2.', '3.', '【', '】', '？', '?', '：', ':']
     
     def __init__(self):
@@ -61,7 +60,7 @@ class ContentGuard:
             if word in text:
                 return False, "输入内容包含不适当关键词，请重新输入。"
         
-        # 检查是否要求代写
+        # 检测是否要求代替完成
         for pattern in self.cheating_patterns:
             if pattern.search(text):
                 return False, "我只能帮你找回写作思路，不能直接替你写作文哦。说说你卡在哪里了？"
@@ -100,7 +99,7 @@ class ContentGuard:
         3. 包含至少2个严重越界模式匹配
         4. 文本连贯（段落之间逻辑衔接，不是列表）
         """
-        # 快速排除：如果包含安全标记，几乎不可能是代写
+        # 快速排除：如果包含安全标记，几乎不可能是代替完成
         if any(marker in text for marker in self.SAFE_MARKERS):
             return False
         

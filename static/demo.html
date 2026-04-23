@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 写作卡壳救援助手 - 交互 Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 { font-size: 24px; margin-bottom: 8px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        
+        .chat-area {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user { text-align: right; }
+        .message.ai { text-align: left; }
+        
+        .bubble {
+            display: inline-block;
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        
+        .message.user .bubble {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.ai .bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .bubble .meta {
+            font-size: 11px;
+            color: #999;
+            margin-top: 6px;
+            text-align: right;
+        }
+        
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .input-area input:focus { border-color: #667eea; }
+        
+        .input-area button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .input-area button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .input-area button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .typing {
+            display: none;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .typing.active { display: block; }
+        
+        .setup-panel {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .setup-panel h2 { font-size: 20px; margin-bottom: 20px; color: #333; }
+        
+        .setup-panel input {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .setup-panel button {
+            padding: 14px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .error { color: #e74c3c; font-size: 14px; margin-top: 10px; }
+        
+        .status-bar {
+            padding: 8px 20px;
+            background: #f0f0f0;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .suggestion-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 0 20px 10px;
+        }
+        
+        .chip {
+            padding: 6px 14px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            font-size: 13px;
+            color: #667eea;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .chip:hover { background: #e0e0e0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 写作小救星</h1>
+            <p>AI 写作卡壳救援助手 - 交互 Demo</p>
+        </div>
+        
+        <!-- 配置面板 -->
+        <div id="setupPanel" class="setup-panel">
+            <h2>开始写作</h2>
+            <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                输入作文题目，AI 会在你卡壳时给你引导
+            </p>
+            <input type="text" id="topicInput" placeholder="例如：那一刻，我长大了" value="那一刻，我长大了">
+            <button onclick="startSession()">开始</button>
+            <div id="setupError" class="error"></div>
+        </div>
+        
+        <!-- 聊天界面 -->
+        <div id="chatPanel" style="display: none;">
+            <div class="status-bar">
+                <span id="sessionInfo">题目: -</span>
+                <span id="modeInfo">模式: 审题</span>
+            </div>
+            
+            <div class="chat-area" id="chatArea">
+                <div class="typing" id="typingIndicator">
+                    🤖 AI 正在思考...
+                </div>
+            </div>
+            
+            <div class="suggestion-chips" id="suggestionChips">
+                <span class="chip" onclick="sendQuick('开始写了')">开始写了</span>
+                <span class="chip" onclick="sendQuick('还是不会')">还是不会</span>
+                <span class="chip" onclick="sendQuick('还是不懂')">还是不懂</span>
+                <span class="chip" onclick="sendQuick('正文写完了，不会结尾')">不会结尾</span>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="输入你想说的..." 
+                       onkeypress="if(event.key==='Enter')sendMessage()">
+                <button id="sendBtn" onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let sessionId = null;
+        let currentMode = '审题';
+        
+        async function startSession() {
+            const topic = document.getElementById('topicInput').value.trim();
+            if (!topic) {
+                document.getElementById('setupError').textContent = '请输入作文题目';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/create_session`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic })
+                });
+                const data = await res.json();
+                
+                if (data.session_id) {
+                    sessionId = data.session_id;
+                    document.getElementById('setupPanel').style.display = 'none';
+                    document.getElementById('chatPanel').style.display = 'block';
+                    document.getElementById('sessionInfo').textContent = `题目: ${topic}`;
+                    
+                    // 自动发送题目
+                    await sendMessageInternal(`题目是《${topic}》`);
+                }
+            } catch (e) {
+                document.getElementById('setupError').textContent = '连接失败，请检查服务器是否运行';
+            }
+        }
+        
+        async function sendQuick(text) {
+            if (!sessionId) return;
+            document.getElementById('messageInput').value = text;
+            await sendMessage();
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text || !sessionId) return;
+            
+            input.value = '';
+            addMessage(text, 'user');
+            
+            await sendMessageInternal(text);
+        }
+        
+        async function sendMessageInternal(text) {
+            const typing = document.getElementById('typingIndicator');
+            typing.classList.add('active');
+            document.getElementById('sendBtn').disabled = true;
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId, message: text })
+                });
+                
+                const data = await res.json();
+                
+                typing.classList.remove('active');
+                
+                // 显示 AI 回复
+                const modeMap = {
+                    'TOPIC_ANALYSIS': '审题',
+                    'STUCK_RESCUE': '卡壳救援',
+                    'ENDING_GUIDE': '结尾收束',
+                    'COMPLETE': '完成'
+                };
+                currentMode = modeMap[data.task_mode] || data.task_mode;
+                document.getElementById('modeInfo').textContent = `模式: ${currentMode}`;
+                
+                // 状态标签
+                let meta = '';
+                if (data.stuck_type) meta += `卡壳: ${data.stuck_type} | `;
+                if (data.current_level) meta += `层级: L${data.current_level} | `;
+                if (data.cool_down) meta += '💡冷却中';
+                
+                addMessage(data.ai_response, 'ai', meta);
+                
+                // 更新快捷按钮
+                updateChips(data.task_mode, data.cool_down);
+                
+            } catch (e) {
+                typing.classList.remove('active');
+                addMessage('抱歉，连接出错了。请刷新页面重试。', 'ai');
+            } finally {
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
+        
+        function addMessage(text, role, meta = '') {
+            const chatArea = document.getElementById('chatArea');
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            
+            const metaHtml = meta ? `<div class="meta">${meta}</div>` : '';
+            div.innerHTML = `<div class="bubble">${escapeHtml(text).replace(/\n/g, '<br>')}${metaHtml}</div>`;
+            
+            chatArea.insertBefore(div, document.getElementById('typingIndicator'));
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+        
+        function updateChips(mode, coolDown) {
+            const chips = document.getElementById('suggestionChips');
+            
+            if (coolDown) {
+                chips.innerHTML = '<span class="chip" onclick="sendQuick(\'我写好了\')">我写好了</span>';
+                return;
+            }
+            
+            if (mode === 'TOPIC_ANALYSIS') {
+                chips.innerHTML = `
+                    <span class="chip" onclick="sendQuick('开始写了')">开始写了</span>
+                    <span class="chip" onclick="sendQuick('我想写帮妈妈洗碗')">帮妈妈洗碗</span>
+                `;
+            } else if (mode === 'STUCK_RESCUE') {
+                chips.innerHTML = `
+                    <span class="chip" onclick="sendQuick('还是不会')">还是不会</span>
+                    <span class="chip" onclick="sendQuick('还是不懂')">还是不懂</span>
+                    <span class="chip" onclick="sendQuick('正文写完了，不会结尾')">不会结尾</span>
+                `;
+            } else if (mode === 'ENDING_GUIDE') {
+                chips.innerHTML = `
+                    <span class="chip" onclick="sendQuick('我选感悟式')">感悟式</span>
+                    <span class="chip" onclick="sendQuick('我选呼应式')">呼应式</span>
+                    <span class="chip" onclick="sendQuick('写完了')">写完了</span>
+                `;
+            } else {
+                chips.innerHTML = '';
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

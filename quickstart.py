@@ -138,10 +138,10 @@ SYSTEM_PROMPT = """你是初中生的写作陪练助手，名字叫"写作小救
 - L1 方向引导：只给 2-3 个展开方向，用问句或选项呈现。不给结构、不给关键词、不给示例句。
 - L2 结构提示：在学生确定方向后，给出段落内部的功能安排。不给具体词语。
 - L3 关键词启发：只给零散的词语或短词组（2-4个字）。不要组成完整句子，不要给句式模板。
-- L4 示例句：最多给 1 个不完整的句式骨架（如："那一刻，我才明白，原来____"）。必须注明"这是骨架，用你的内容填空"。
+- L4 示例句：最多给 1 个不完整的句式骨架（如："那一刻，我才明白，原来____"）。请标注"这是骨架，用你的内容填空"。
 
 ## 冷却机制（建议暂停）
-如果同一卡壳点学生已经求助了 3 次以上（当前层级达到 L4），必须停止提供任何新内容，只回复：
+如果同一卡壳点学生已经求助了 3 次以上（当前层级达到 L4），请暂停提供任何新内容，只回复：
 "💡 我们已经把这一步拆解得比较细了。建议你先根据刚才的提示，自己试着写2-3句话。写完之后如果还觉得不对，我们再一起看。写作不是一次就写对的，是先写出来再改对的。"
 
 ## 交互风格
@@ -290,7 +290,7 @@ class SessionManager:
         if any(s in user_input for s in ["还是不会", "还是不懂", "还是不知道", "还是卡"]):
             session.advance_level()
         
-        system = SYSTEM_PROMPT + f"\n\n## 当前模式：写作中途卡壳救援\n\n### 当前状态\n- 卡壳类型：{session.current_stuck_type}\n- 当前引导层级：L{session.current_level}（共4层）\n- 当前卡壳点已求助次数：{session.stuck_count}\n- 冷却状态：{'已激活' if session.should_cool_down() else '未激活'}\n\n### 引导层级规则\nL1：只给2-3个方向选项\nL2：只给结构安排\nL3：只给零散词语（2-4字）\nL4：最多1个句式骨架\n\n### 冷却机制\n{'已激活 - 必须停止给新内容' if session.should_cool_down() else '未激活'}"
+        system = SYSTEM_PROMPT + f"\n\n## 当前模式：写作中途卡壳救援\n\n### 当前状态\n- 卡壳类型：{session.current_stuck_type}\n- 当前引导层级：L{session.current_level}（共4层）\n- 当前卡壳点已求助次数：{session.stuck_count}\n- 冷却状态：{'已激活' if session.should_cool_down() else '未激活'}\n\n### 引导层级规则\nL1：只给2-3个方向选项\nL2：只给结构安排\nL3：只给零散词语（2-4字）\nL4：最多1个句式骨架\n\n### 冷却机制\n{'已激活 - 请暂停给新内容' if session.should_cool_down() else '未激活'}"
         
         context = f"作文题目：{session.topic}\n\n" if session.topic else ""
         if session.written_content:

@@ -26,6 +26,15 @@ class SQLAlchemySessionRepository(SessionRepository):
         state.written_content = orm.written_content or ""
         if orm.stuck_type and orm.stuck_type in StuckType.__members__:
             state.current_stuck_type = StuckType[orm.stuck_type]
+        
+        # 从 messages 表恢复 conversation_history
+        msgs = self.db.query(MessageORM).filter(
+            MessageORM.session_id == orm.id
+        ).order_by(MessageORM.created_at).all()
+        state.conversation_history = [
+            {"role": m.role, "content": m.content} for m in msgs
+        ]
+        
         return state
 
     def _to_orm(self, state: SessionState) -> SessionORM:

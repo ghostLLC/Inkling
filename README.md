@@ -4,95 +4,107 @@
 
 ## 快速开始
 
-### 方式1：Web 交互 Demo（推荐）
+### 方式1：FastAPI 服务（推荐）
 
 ```bash
-# 配置 DeepSeek API（通过环境变量或 .env 文件）
-# export OPENAI_API_KEY="<你的API Key>"
-# export OPENAI_BASE_URL="https://api.deepseek.com/v1"
-# export OPENAI_MODEL="deepseek-chat"
+# 安装依赖
+pip install -e ".[dev]"
 
-# 启动 API 服务器 + Web Demo
-python3 api_server.py
+# 启动服务
+uvicorn app.main:app --reload --port 8080
 
 # 打开浏览器访问 http://localhost:8080
+# API 文档: http://localhost:8080/docs
 ```
 
 ### 方式2：命令行交互
 
 ```bash
 python3 demo.py
-# 选择选项 3 (OpenAI-Compatible)，自动识别环境变量
 ```
 
-### 方式3：手动配置
+### 环境变量配置
 
 ```bash
 cp .env.example .env
 # 编辑 .env 填入 API 配置
-python3 demo.py
 ```
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `PROVIDER_TYPE` | LLM 提供商: `mock` / `moonshot` / `openai-compatible` | `mock` |
+| `LLM_API_KEY` | API Key | - |
+| `LLM_BASE_URL` | API 地址 | - |
+| `LLM_MODEL` | 模型名称 | - |
+| `DATABASE_URL` | 数据库连接 | `sqlite:///./inkling.db` |
+
+## API 端点
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/health` | 健康检查 |
+| POST | `/api/sessions` | 创建会话 |
+| POST | `/api/sessions/{id}/messages` | 发送消息 |
+| GET | `/api/sessions/{id}` | 查询会话 |
+
+## 核心机制
+
+- **审题立意辅助**：关键词提取 → 立意引导 → 框架建议
+- **卡壳救援分层**：L1方向 → L2结构 → L3关键词 → L4句式骨架
+- **冷却机制**：同一卡点连续3次后强制鼓励独立写作
+- **结尾收束**：5种策略选择 → 点题方向 → 句式支持
+- **内容安全 v2**：精确检测代写行为，智能降级 + 自动重生成，不粗暴拦截
 
 ## 项目结构
 
 ```
 ai-writing-rescue/
-├── api_server.py           # Web API 服务器（启动后访问 localhost:8080）
-├── demo.py                 # 命令行交互 Demo
-├── test_api.py             # API 连通性测试
-├── test_real_api.py        # 端到端真实 API 测试
-├── core/                   # 核心引擎
-│   ├── state_machine.py    # 状态机（审题→卡壳→结尾→完成）
-│   ├── stuck_classifier.py # 卡壳类型分类器（6种类型）
-│   ├── guide_generator.py  # Prompt 生成器（4层递进）
-│   ├── content_guard.py    # 内容安全 v2（精确检测 + 智能降级）
-│   ├── session_manager.py  # 会话管理器
-│   └── llm_provider.py     # LLM 接入层（Mock/DeepSeek/OpenAI-Compatible）
+├── app/                    # FastAPI 应用
+│   ├── main.py             # 应用入口
+│   ├── api/                # HTTP 接口层
+│   │   └── routers/
+│   │       ├── health.py
+│   │       └── sessions.py
+│   ├── application/        # 用例编排层
+│   │   └── use_cases/
+│   ├── domain/             # 领域层
+│   │   └── repositories/
+│   └── infrastructure/     # 基础设施层
+│       ├── config/
+│       ├── db/
+│       ├── repositories/
+│       └── llm/
+├── core/                   # 核心引擎（保留）
+│   ├── state_machine.py
+│   ├── session_manager.py
+│   ├── stuck_classifier.py
+│   ├── guide_generator.py
+│   ├── content_guard.py
+│   └── llm_provider.py
 ├── prompts/
-│   └── system_prompt.md    # 系统 Prompt（分层约束 + 冷却机制）
+│   └── system_prompt.md
 ├── static/
-│   └── demo.html           # Web 交互界面
+│   └── demo.html
 ├── tests/
+│   ├── unit/
+│   ├── integration/
+│   ├── e2e/
 │   └── test_flows.py       # 18 个单元测试
-└── .env.example            # 配置模板
+├── pyproject.toml
+├── .env.example
+└── README.md
 ```
 
-## 核心能力
+## 技术栈
 
-- **审题立意**：关键词分析 → 追问引导 → 起步框架
-- **卡壳救援**：6种类型 × 4层递进（L1方向→L2结构→L3关键词→L4示例）
-- **冷却机制**：同一卡点连续3次后强制鼓励独立写作
-- **结尾收束**：5种策略选择 → 点题方向 → 关键词指导
-- **内容安全 v2**：精确检测代写行为，智能降级 + 自动重生成，不粗暴拦截
+- FastAPI + Uvicorn
+- SQLAlchemy + SQLite（可升级 PostgreSQL）
+- Pydantic Settings
+- OpenAI SDK（兼容 Moonshot / DeepSeek）
 
 ## 测试
 
 ```bash
-# 单元测试
+# 旧版核心测试
 python3 -m unittest tests/test_flows.py -v
-
-# API 连通性测试
-python3 test_api.py
-
-# 端到端真实 API 测试
-python3 test_real_api.py
 ```
-
-## 状态流转
-
-```
-[学生进入] → TOPIC_ANALYSIS（审题立意）
-                ↓
-    [学生说"开始写了"] → STUCK_RESCUE（卡壳救援）
-                            ↓
-        [学生说"不会结尾"] → ENDING_GUIDE（结尾收束）
-                                  ↓
-                        [学生说"写完了"] → COMPLETE（完成）
-```
-
-## LLM 接入
-
-支持三种 Provider：
-- `mock` — 本地模拟，无需 API Key，用于测试
-- `moonshot` — Moonshot AI (Kimi)
-- `openai-compatible` — 任意 OpenAI-compatible API（DeepSeek / 第三方代理等）

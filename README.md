@@ -8,7 +8,7 @@
 
 ```bash
 # 配置 DeepSeek API
-export OPENAI_API_KEY="sk-2c1948a4ead04550935f22bfdcaed6a3"
+export OPENAI_API_KEY="你的API Key"
 export OPENAI_BASE_URL="https://api.deepseek.com/v1"
 export OPENAI_MODEL="deepseek-chat"
 
@@ -61,7 +61,7 @@ ai-writing-rescue/
 
 - **审题立意**：关键词分析 → 追问引导 → 起步框架
 - **卡壳救援**：6种类型 × 4层递进（L1方向→L2结构→L3关键词→L4示例）
-- **冷却机制**：同一卡点连续3次后强制鼓励独立写作
+- **冷却机制**：同一卡点连续3次后建议暂停，鼓励独立写作
 - **结尾收束**：5种策略选择 → 点题方向 → 关键词指导
 - **内容安全 v2**：精确检测代替完成行为，智能降级 + 自动重生成，不粗暴拦截
 

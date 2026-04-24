@@ -204,7 +204,7 @@ class SessionManager:
         
         # 检查冷却
         if session.should_cool_down():
-            # 重置层级，强制冷却
+            # 重置层级，进入冷却模式
             session.reset_level()
             return {
                 "ai_response": "💡 我们已经把这一步拆解得比较细了。现在我建议你先根据刚才的提示，自己试着写2-3句话。写完之后如果还觉得不对，我们再一起看。写作不是一次就写对的，是先写出来再改对的。✍️",

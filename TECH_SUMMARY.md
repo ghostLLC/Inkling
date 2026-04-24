@@ -39,7 +39,7 @@
 | L2 结构 | 只给结构安排，不给词语 | ✅ |
 | L3 关键词 | 只给零散词语（2-4字） | ✅ |
 | L4 示例 | 最多1个句式骨架，必须留空 | ✅ |
-| 冷却 | 强制停止给新内容 | ✅ |
+| 冷却 | 建议暂停给新内容 | ✅ |
 
 ## 快速启动
 
@@ -47,7 +47,7 @@
 cd ai-writing-rescue
 
 # 配置 API
-export OPENAI_API_KEY="sk-2c1948a4ead04550935f22bfdcaed6a3"
+export OPENAI_API_KEY="你的API Key"
 export OPENAI_BASE_URL="https://api.deepseek.com/v1"
 export OPENAI_MODEL="deepseek-chat"
 

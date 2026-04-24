@@ -94,7 +94,7 @@ class TestContentGuard(unittest.TestCase):
         self.assertIn("不能直接替你写", reason)
     
     def test_sensitive_content(self):
-        is_safe, reason = self.guard.check_input("杀人场面")
+        is_safe, reason = self.guard.check_input("暴力场面")
         self.assertFalse(is_safe)
 
 

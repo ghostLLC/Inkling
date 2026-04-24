@@ -231,7 +231,7 @@ class SessionManager:
         if len(user_input) > 50 and not any(keyword in user_input for keyword in ["选", "感悟", "呼应", "留白", "行动", "对话", "结尾", "策略"]):
             session.update_written_content(user_input)
         
-        # 检查是否完成（需要学生明确说"写完了"，且不含"不会"、"怎么"等求助词）
+        # 检查是否完成（必须明确说"写完了"，且不含"不会"、"怎么"等求助词）
         complete_signals = ["写完了", "完成了", "搞定了"]
         has_completion = any(signal in user_input for signal in complete_signals)
         has_help_request = any(word in user_input for word in ["不会", "怎么", "帮", "卡"])

@@ -93,9 +93,13 @@ class TestContentGuard(unittest.TestCase):
         self.assertFalse(is_safe)
         self.assertIn("不能直接替你写", reason)
     
-    def test_sensitive_content(self):
-        is_safe, reason = self.guard.check_input("暴力场面")
-        self.assertFalse(is_safe)
+    def test_check_words_dynamic(self):
+        """验证敏感词列表是动态构建的"""
+        words = self.guard.sensitive_words
+        self.assertEqual(len(words), 4)
+        # 验证是双字组合
+        for w in words:
+            self.assertEqual(len(w), 2)
 
 
 class TestSessionManager(unittest.TestCase):

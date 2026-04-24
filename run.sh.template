@@ -7,10 +7,10 @@
 
 cd "$(dirname "$0")"
 
-# TODO: 填入你的 API 配置
-export OPENAI_API_KEY="your-api-key-here"
-export OPENAI_BASE_URL="https://your-api-url/v1"
-export OPENAI_MODEL="your-model-name"
+# TODO: 通过环境变量或 .env 文件配置 API
+# export OPENAI_API_KEY="<你的API Key>"
+# export OPENAI_BASE_URL="<你的API URL>"
+# export OPENAI_MODEL="<你的模型名称>"
 
 echo "📝 AI 写作卡壳救援助手"
 echo "======================"

@@ -46,10 +46,10 @@
 ```bash
 cd ai-writing-rescue
 
-# 配置 API
-export OPENAI_API_KEY="你的API Key"
-export OPENAI_BASE_URL="https://api.deepseek.com/v1"
-export OPENAI_MODEL="deepseek-chat"
+# 配置 API（通过环境变量或 .env 文件）
+# export OPENAI_API_KEY="<你的API Key>"
+# export OPENAI_BASE_URL="https://api.deepseek.com/v1"
+# export OPENAI_MODEL="deepseek-chat"
 
 # 启动 Web Demo
 python3 api_server.py

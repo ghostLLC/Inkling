@@ -20,7 +20,7 @@ if not API_KEY:
     print("❌ 未设置 OPENAI_API_KEY 环境变量")
     print()
     print("设置方式:")
-    print("  export OPENAI_API_KEY='your-api-key'")
+    print("  # export OPENAI_API_KEY='<你的API Key>'")
     print("  export OPENAI_BASE_URL='https://tmlgb.me/v1'")
     print("  export OPENAI_MODEL='gpt-5.4'")
     sys.exit(1)

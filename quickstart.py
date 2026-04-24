@@ -4,9 +4,10 @@ AI 写作卡壳救援助手 - 单文件快速体验版
 只需要这一个文件，安装 openai 后即可运行。
 
 用法:
-  export OPENAI_API_KEY="你的API Key"
-  export OPENAI_BASE_URL="https://api.deepseek.com/v1"
-  export OPENAI_MODEL="deepseek-chat"
+  # 配置环境变量后运行：
+  # export OPENAI_API_KEY="<你的API Key>"
+  # export OPENAI_BASE_URL="https://api.deepseek.com/v1"
+  # export OPENAI_MODEL="deepseek-chat"
   python3 quickstart.py
 
 然后打开浏览器访问 http://localhost:8080

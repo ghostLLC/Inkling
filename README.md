@@ -7,10 +7,10 @@
 ### 方式1：Web 交互 Demo（推荐）
 
 ```bash
-# 配置 DeepSeek API
-export OPENAI_API_KEY="你的API Key"
-export OPENAI_BASE_URL="https://api.deepseek.com/v1"
-export OPENAI_MODEL="deepseek-chat"
+# 配置 DeepSeek API（通过环境变量或 .env 文件）
+# export OPENAI_API_KEY="<你的API Key>"
+# export OPENAI_BASE_URL="https://api.deepseek.com/v1"
+# export OPENAI_MODEL="deepseek-chat"
 
 # 启动 API 服务器 + Web Demo
 python3 api_server.py

@@ -29,6 +29,9 @@ dev = [
     "mypy>=1.8.0",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["ai_engine"]
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"
@@ -45,5 +48,5 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = [".", "backend"]
 asyncio_mode = "auto"

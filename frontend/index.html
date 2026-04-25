@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 写作卡壳救援助手</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 写作小救星</h1>
+            <p>AI 写作卡壳救援助手</p>
+        </div>
+        
+        <!-- 配置面板 -->
+        <div id="setupPanel" class="setup-panel">
+            <h2>开始写作</h2>
+            <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                输入作文题目，AI 会在你卡壳时给你引导
+            </p>
+            <input type="text" id="topicInput" placeholder="例如：那一刻，我长大了" value="那一刻，我长大了">
+            <button onclick="startSession()">开始</button>
+            <div id="setupError" class="error"></div>
+        </div>
+        
+        <!-- 聊天界面 -->
+        <div id="chatPanel" style="display: none;">
+            <div class="status-bar">
+                <span id="sessionInfo">题目: -</span>
+                <span id="modeInfo">模式: 审题</span>
+            </div>
+            
+            <div class="chat-area" id="chatArea">
+                <div class="typing" id="typingIndicator">
+                    🤖 AI 正在思考...
+                </div>
+            </div>
+            
+            <div class="suggestion-chips" id="suggestionChips">
+                <span class="chip" onclick="sendQuick('开始写了')">开始写了</span>
+                <span class="chip" onclick="sendQuick('还是不会')">还是不会</span>
+                <span class="chip" onclick="sendQuick('还是不懂')">还是不懂</span>
+                <span class="chip" onclick="sendQuick('正文写完了，不会结尾')">不会结尾</span>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="输入你想说的..." 
+                       onkeypress="if(event.key==='Enter')sendMessage()">
+                <button id="sendBtn" onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/app.js"></script>
+</body>
+</html>

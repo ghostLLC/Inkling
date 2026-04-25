@@ -1,9 +1,14 @@
 """Use Case 单元测试"""
 import unittest
+import sys
+import os
 from unittest.mock import Mock, patch
 
-from core.state_machine import SessionState, TaskMode
-from core.llm_provider import MockProvider
+# 确保项目根目录在 sys.path 中
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+
+from ai_engine.core.state_machine import SessionState, TaskMode
+from ai_engine.core.llm_provider import MockProvider
 
 from app.application.use_cases.create_session import CreateSessionUseCase
 from app.application.use_cases.process_message import ProcessMessageUseCase

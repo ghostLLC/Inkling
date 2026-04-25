@@ -2,15 +2,15 @@
 AI 写作卡壳救援助手 - 单元测试
 
 运行方式:
-    cd /root/.openclaw/workspace/ai-writing-rescue
-    python3 -m unittest tests/test_flows.py -v
+    cd D:\\Inkling
+    python -m unittest tests/test_flows.py -v
 """
 import unittest
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from core import (
+from ai_engine.core import (
     SessionManager, MockProvider, StateMachine, SessionState,
     TaskMode, GuideLevel, StuckType, StuckClassifier, ContentGuard
 )

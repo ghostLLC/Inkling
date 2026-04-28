@@ -14,3 +14,30 @@ build/
 .mypy_cache/
 *.sqlite3
 
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Node (if frontend ever uses npm)
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Coverage
+.coverage
+htmlcov/
+
+# Temporary
+tmp/
+temp/
+

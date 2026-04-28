@@ -132,6 +132,7 @@ function updateChips(mode, coolDown) {
             <span class="chip" onclick="sendQuick('还是不会')">还是不会</span>
             <span class="chip" onclick="sendQuick('还是不懂')">还是不懂</span>
             <span class="chip" onclick="sendQuick('正文写完了，不会结尾')">不会结尾</span>
+            <span class="chip" onclick="sendQuick('帮我看看进度')">📊 进度</span>
         `;
     } else if (mode === 'ENDING_GUIDE') {
         chips.innerHTML = `
@@ -143,6 +144,59 @@ function updateChips(mode, coolDown) {
         chips.innerHTML = '';
     }
 }
+
+async function checkProgress() {
+    if (!sessionId) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/enhanced/progress`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId })
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            updateProgressUI(data);
+        }
+    } catch (e) {
+        console.log('进度查询失败:', e);
+    }
+}
+
+function updateProgressUI(data) {
+    const panel = document.getElementById('progressPanel');
+    const bar = document.getElementById('progressBar');
+    const percent = document.getElementById('progressPercent');
+    const meta = document.getElementById('progressMeta');
+    
+    if (!panel || !data.written_content) return;
+    
+    panel.style.display = 'block';
+    
+    const total = data.total_words || 0;
+    const progress = data.progress_percentage || 0;
+    const structure = data.structure || {};
+    
+    bar.style.width = `${Math.min(progress, 100)}%`;
+    percent.textContent = `${Math.min(progress, 100)}%`;
+    
+    const structureText = [];
+    if (structure.has_intro) structureText.push('开头✓');
+    if (structure.has_body) structureText.push('正文✓');
+    if (structure.has_ending) structureText.push('结尾✓');
+    
+    meta.innerHTML = `
+        <span>已写 ${total} 字</span>
+        <span>结构: ${structureText.join(' · ') || '开头'}</span>
+    `;
+}
+
+// 每次发消息后检查进度
+const originalSendMessageInternal = sendMessageInternal;
+sendMessageInternal = async function(text) {
+    await originalSendMessageInternal(text);
+    // 延迟检查进度，等后端处理完成
+    setTimeout(checkProgress, 500);
+};
 
 function escapeHtml(text) {
     const div = document.createElement('div');

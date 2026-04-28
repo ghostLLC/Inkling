@@ -15,18 +15,26 @@ from fastapi.staticfiles import StaticFiles
 
 from app.infrastructure.db.base import init_db
 from app.infrastructure.config.settings import get_settings
+from app.infrastructure.logging import setup_logging, get_logger
 from app.api.routers import health, sessions, enhanced
 
 settings = get_settings()
+logger = get_logger("app.main")
+
+# 启动时初始化日志
+setup_logging(level="DEBUG" if settings.debug else "INFO")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期"""
+    logger.info("🚀 Inkling 启动中...")
     # 启动时初始化数据库
     init_db()
+    logger.info("✅ 数据库初始化完成")
     yield
-    # 关闭时清理（如需）
+    # 关闭时清理
+    logger.info("🛑 Inkling 关闭")
 
 
 app = FastAPI(
@@ -50,9 +58,8 @@ app.include_router(sessions.router, prefix="/api")
 app.include_router(enhanced.router, prefix="/api")
 
 # 静态文件（前端页面）
-import os
-# 项目根目录下的 frontend/
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 frontend_dir = os.path.join(project_root, "frontend")
 if os.path.exists(frontend_dir):
     app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
+    logger.info(f"📁 前端目录挂载: {frontend_dir}")

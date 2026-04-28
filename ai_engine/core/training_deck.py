@@ -1,14 +1,13 @@
-"""
-微写作训练舱 - 写作技能组件化训练（简化版）
+"""微写作训练舱 - 写作技能组件化训练（简化版）
 """
 import random
-from typing import Dict, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 
 
 class SkillLevel(Enum):
     """技能水平"""
+
     LOCKED = "locked"
     BEGINNER = "beginner"
     DEVELOPING = "developing"
@@ -18,20 +17,21 @@ class SkillLevel(Enum):
 @dataclass
 class TrainingCard:
     """训练卡片"""
+
     id: str
     skill_type: str
     difficulty: int
     duration: int
     title: str
     task: str
-    constraints: List[str]
+    constraints: list[str]
     hint: str
-    example: Optional[str] = None
+    example: str | None = None
 
 
 class TrainingDeck:
     """微写作训练舱"""
-    
+
     TRAINING_LIBRARY = [
         TrainingCard(
             id="ACTION_CHAIN_001",
@@ -100,45 +100,45 @@ class TrainingDeck:
             example="金属撞击地面的脆响，滚了几圈，停在我脚边。我弯腰捡起，冰凉的触感从指尖传来。",
         ),
     ]
-    
+
     def __init__(self):
-        self.user_progress: Dict[str, Dict] = {}
-        self.skill_levels: Dict[str, SkillLevel] = {}
+        self.user_progress: dict[str, dict] = {}
+        self.skill_levels: dict[str, SkillLevel] = {}
         self._initialize_skills()
-    
+
     def _initialize_skills(self):
         """初始化技能状态"""
         all_skills = set(card.skill_type for card in self.TRAINING_LIBRARY)
         for skill in all_skills:
             self.skill_levels[skill] = SkillLevel.BEGINNER
-    
-    def get_daily_training(self, user_id: str = "default", focus_skill: Optional[str] = None):
+
+    def get_daily_training(self, user_id: str = "default", focus_skill: str | None = None):
         """获取每日训练卡片"""
         available_cards = self.TRAINING_LIBRARY
-        
+
         if focus_skill:
             skill_cards = [c for c in available_cards if c.skill_type == focus_skill]
             if skill_cards:
                 return random.choice(skill_cards)
-        
+
         return random.choice(available_cards)
-    
-    def get_skill_training(self, skill_type: str, difficulty: Optional[int] = None):
+
+    def get_skill_training(self, skill_type: str, difficulty: int | None = None):
         """获取指定技能的训练卡片"""
         cards = [c for c in self.TRAINING_LIBRARY if c.skill_type == skill_type]
         if difficulty is not None:
             cards = [c for c in cards if c.difficulty == difficulty]
         return cards
-    
-    def evaluate_training(self, card_id: str, user_text: str) -> Dict:
+
+    def evaluate_training(self, card_id: str, user_text: str) -> dict:
         """轻量评估训练结果"""
         card = next((c for c in self.TRAINING_LIBRARY if c.id == card_id), None)
         if not card:
             return {"error": "卡片不存在"}
-        
+
         highlights = []
         suggestions = []
-        
+
         # 简单评估逻辑
         if card.skill_type == "动作描写":
             action_words = ["了", "着", "过", "去", "来", "走", "跑", "拿", "放"]
@@ -147,22 +147,22 @@ class TrainingDeck:
                 highlights.append("动作链条很清晰")
             else:
                 suggestions.append("试试加入更多连续动作")
-        
+
         if len(user_text) <= 100 and card.id != "FREE_001":
             highlights.append("字数控制很好")
         elif len(user_text) > 100:
             suggestions.append("可以再精简一些")
-        
+
         if not highlights:
             highlights.append("完成了训练，这本身就是进步")
-        
+
         return {
             "card_id": card_id,
             "skill_type": card.skill_type,
             "highlights": highlights[:2],
             "suggestions": suggestions[:1],
         }
-    
+
     def record_completion(self, user_id: str, card_id: str, user_text: str):
         """记录训练完成"""
         if user_id not in self.user_progress:
@@ -170,7 +170,7 @@ class TrainingDeck:
                 "completed_cards": [],
                 "skill_counts": {},
             }
-        
+
         progress = self.user_progress[user_id]
         card = next((c for c in self.TRAINING_LIBRARY if c.id == card_id), None)
         if card:
@@ -181,7 +181,7 @@ class TrainingDeck:
             skill = card.skill_type
             progress["skill_counts"][skill] = progress["skill_counts"].get(skill, 0) + 1
             self._check_skill_upgrade(skill, progress["skill_counts"][skill])
-    
+
     def _check_skill_upgrade(self, skill: str, count: int):
         """检查技能是否升级"""
         current_level = self.skill_levels.get(skill, SkillLevel.LOCKED)
@@ -189,8 +189,8 @@ class TrainingDeck:
             self.skill_levels[skill] = SkillLevel.DEVELOPING
         elif current_level == SkillLevel.DEVELOPING and count >= 5:
             self.skill_levels[skill] = SkillLevel.PROFICIENT
-    
-    def get_skill_status(self) -> Dict:
+
+    def get_skill_status(self) -> dict:
         """获取技能状态"""
         status = {}
         for skill, level in self.skill_levels.items():
@@ -200,7 +200,7 @@ class TrainingDeck:
                 "progress": self._get_level_progress(level),
             }
         return status
-    
+
     def _get_level_label(self, level: SkillLevel) -> str:
         labels = {
             SkillLevel.LOCKED: "待解锁",
@@ -209,7 +209,7 @@ class TrainingDeck:
             SkillLevel.PROFICIENT: "熟练",
         }
         return labels.get(level, "未知")
-    
+
     def _get_level_progress(self, level: SkillLevel) -> float:
         if level == SkillLevel.LOCKED:
             return 0.0
@@ -219,17 +219,17 @@ class TrainingDeck:
             return 0.6
         else:
             return 1.0
-    
-    def recommend_training(self, stuck_history: List[str]):
+
+    def recommend_training(self, stuck_history: list[str]):
         """基于卡壳历史推荐训练"""
         if not stuck_history:
             return None
-        
+
         from collections import Counter
         stuck_counts = Counter(stuck_history)
         most_common = stuck_counts.most_common(1)[0]
         stuck_type, count = most_common
-        
+
         stuck_to_skill = {
             "情节推进卡": "动作描写",
             "细节展开卡": "感官聚焦",
@@ -237,7 +237,7 @@ class TrainingDeck:
             "情感表达卡": "结尾收束",
             "心理描写卡": "心理描写",
         }
-        
+
         skill = stuck_to_skill.get(stuck_type)
         if skill:
             cards = self.get_skill_training(skill)

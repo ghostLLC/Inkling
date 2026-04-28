@@ -1,5 +1,4 @@
 """统一配置系统 - 基于 pydantic-settings"""
-from typing import Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -27,9 +26,9 @@ class Settings(BaseSettings):
 
     # === LLM Provider ===
     provider_type: str = Field(default="mock", description="LLM 提供商类型")
-    llm_api_key: Optional[str] = Field(default=None, description="LLM API Key")
-    llm_base_url: Optional[str] = Field(default=None, description="LLM Base URL")
-    llm_model: Optional[str] = Field(default=None, description="LLM 模型名称")
+    llm_api_key: str | None = Field(default=None, description="LLM API Key")
+    llm_base_url: str | None = Field(default=None, description="LLM Base URL")
+    llm_model: str | None = Field(default=None, description="LLM 模型名称")
 
     @property
     def is_mock(self) -> bool:
@@ -41,7 +40,7 @@ class Settings(BaseSettings):
 
 
 # 全局单例
-_settings: Optional[Settings] = None
+_settings: Settings | None = None
 
 
 def get_settings() -> Settings:

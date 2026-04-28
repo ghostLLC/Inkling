@@ -1,15 +1,12 @@
+"""安全检查流水线 - 封装输入/输出安全检查与重生成逻辑
 """
-安全检查流水线 - 封装输入/输出安全检查与重生成逻辑
-"""
-from typing import Tuple, Optional, Dict, Any
 
 from ..content_guard import ContentGuard
 from ..llm_provider import LLMProvider
 
 
 class SecurityPipeline:
-    """
-    安全检查流水线
+    """安全检查流水线
 
     职责：
     1. 输入安全检查
@@ -21,16 +18,15 @@ class SecurityPipeline:
         self.guard = content_guard
         self.llm = llm
 
-    def check_input(self, text: str) -> Tuple[bool, str]:
+    def check_input(self, text: str) -> tuple[bool, str]:
         """检查用户输入是否安全"""
         return self.guard.check_input(text)
 
     def process_output(
         self,
         raw_response: str,
-    ) -> Tuple[bool, str, str]:
-        """
-        处理LLM原始输出
+    ) -> tuple[bool, str, str]:
+        """处理LLM原始输出
 
         返回: (是否通过, 处理后的文本, 状态: "ok" | "warning")
         """
@@ -44,10 +40,9 @@ class SecurityPipeline:
     def regenerate_safe_response(
         self,
         violation_reason: str,
-        original_prompt: Dict[str, str],
+        original_prompt: dict[str, str],
     ) -> str:
-        """
-        尝试重新生成安全回复
+        """尝试重新生成安全回复
 
         如果重生成仍失败，返回兜底安全提示。
         """

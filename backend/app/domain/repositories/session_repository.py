@@ -1,6 +1,5 @@
 """会话仓储接口（领域层）"""
 from abc import ABC, abstractmethod
-from typing import Optional, List
 
 from ai_engine.core.state_machine import SessionState
 
@@ -14,7 +13,7 @@ class SessionRepository(ABC):
         pass
 
     @abstractmethod
-    def get_by_id(self, session_id: str) -> Optional[SessionState]:
+    def get_by_id(self, session_id: str) -> SessionState | None:
         """按 ID 查询"""
         pass
 
@@ -24,6 +23,6 @@ class SessionRepository(ABC):
         pass
 
     @abstractmethod
-    def get_messages(self, session_id: str) -> List[dict]:
+    def get_messages(self, session_id: str) -> list[dict]:
         """获取会话消息历史"""
         pass

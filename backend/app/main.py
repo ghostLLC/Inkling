@@ -1,6 +1,6 @@
 """FastAPI 应用入口"""
-import sys
 import os
+import sys
 
 # 将项目根目录加入 sys.path，使 from ai_engine.core.xxx 可解析
 _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -13,10 +13,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.infrastructure.db.base import init_db
+from app.api.routers import enhanced, health, sessions
 from app.infrastructure.config.settings import get_settings
-from app.infrastructure.logging import setup_logging, get_logger
-from app.api.routers import health, sessions, enhanced
+from app.infrastructure.db.base import init_db
+from app.infrastructure.logging import get_logger, setup_logging
 
 settings = get_settings()
 logger = get_logger("app.main")

@@ -1,11 +1,10 @@
 """SQLAlchemy 会话仓储实现"""
-from typing import Optional, List
 
 from sqlalchemy.orm import Session
 
-from app.infrastructure.db.models import SessionORM, MessageORM
+from ai_engine.core.state_machine import GuideLevel, SessionState, StuckType, TaskMode
 from app.domain.repositories.session_repository import SessionRepository
-from ai_engine.core.state_machine import SessionState, TaskMode, GuideLevel, StuckType
+from app.infrastructure.db.models import MessageORM, SessionORM
 
 
 class SQLAlchemySessionRepository(SessionRepository):
@@ -26,7 +25,7 @@ class SQLAlchemySessionRepository(SessionRepository):
         state.written_content = orm.written_content or ""
         if orm.stuck_type and orm.stuck_type in StuckType.__members__:
             state.current_stuck_type = StuckType[orm.stuck_type]
-        
+
         # 从 messages 表恢复 conversation_history
         msgs = self.db.query(MessageORM).filter(
             MessageORM.session_id == orm.id
@@ -34,7 +33,7 @@ class SQLAlchemySessionRepository(SessionRepository):
         state.conversation_history = [
             {"role": m.role, "content": m.content} for m in msgs
         ]
-        
+
         return state
 
     def _to_orm(self, state: SessionState) -> SessionORM:
@@ -70,7 +69,7 @@ class SQLAlchemySessionRepository(SessionRepository):
             self.db.add(orm)
         self.db.commit()
 
-    def get_by_id(self, session_id: str) -> Optional[SessionState]:
+    def get_by_id(self, session_id: str) -> SessionState | None:
         """按 ID 查询"""
         orm = self.db.query(SessionORM).filter(SessionORM.id == session_id).first()
         if not orm:
@@ -83,7 +82,7 @@ class SQLAlchemySessionRepository(SessionRepository):
         self.db.add(msg)
         self.db.commit()
 
-    def get_messages(self, session_id: str) -> List[dict]:
+    def get_messages(self, session_id: str) -> list[dict]:
         """获取会话消息历史"""
         msgs = self.db.query(MessageORM).filter(MessageORM.session_id == session_id).order_by(MessageORM.created_at).all()
         return [{"role": m.role, "content": m.content, "created_at": m.created_at.isoformat()} for m in msgs]

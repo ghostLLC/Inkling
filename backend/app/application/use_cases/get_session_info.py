@@ -1,5 +1,5 @@
 """获取会话信息用例"""
-from typing import Optional, Dict, Any
+from typing import Any
 
 from app.domain.repositories.session_repository import SessionRepository
 
@@ -10,7 +10,7 @@ class GetSessionInfoUseCase:
     def __init__(self, repo: SessionRepository):
         self.repo = repo
 
-    def execute(self, session_id: str) -> Optional[Dict[str, Any]]:
+    def execute(self, session_id: str) -> dict[str, Any] | None:
         session = self.repo.get_by_id(session_id)
         if not session:
             return None

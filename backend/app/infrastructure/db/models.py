@@ -1,12 +1,14 @@
 """数据库 ORM 模型"""
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, Text, DateTime, Boolean
+
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
 
 from app.infrastructure.db.base import Base
 
 
 class SessionORM(Base):
     """会话 ORM 模型"""
+
     __tablename__ = "sessions"
 
     id = Column(String(16), primary_key=True, index=True)
@@ -24,6 +26,7 @@ class SessionORM(Base):
 
 class MessageORM(Base):
     """消息 ORM 模型"""
+
     __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

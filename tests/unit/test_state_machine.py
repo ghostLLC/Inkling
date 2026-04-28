@@ -1,13 +1,11 @@
+"""StateMachine 单元测试
 """
-StateMachine 单元测试
-"""
-import pytest
 from ai_engine.core.state_machine import (
-    StateMachine,
-    SessionState,
-    TaskMode,
     GuideLevel,
+    SessionState,
+    StateMachine,
     StuckType,
+    TaskMode,
 )
 
 

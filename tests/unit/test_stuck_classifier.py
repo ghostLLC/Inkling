@@ -1,7 +1,5 @@
+"""StuckClassifier 单元测试
 """
-StuckClassifier 单元测试
-"""
-import pytest
 from ai_engine.core.stuck_classifier import StuckClassifier, StuckType
 
 

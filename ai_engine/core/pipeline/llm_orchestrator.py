@@ -1,7 +1,6 @@
+"""LLM 编排器 - 封装 Prompt 生成、LLM 调用与结果处理
 """
-LLM 编排器 - 封装 Prompt 生成、LLM 调用与结果处理
-"""
-from typing import Dict, Any, Optional
+from typing import Any
 
 from ..guide_generator import GuideGenerator
 from ..llm_provider import LLMProvider
@@ -9,8 +8,7 @@ from .security_pipeline import SecurityPipeline
 
 
 class LLMOrchestrator:
-    """
-    LLM 调用编排器
+    """LLM 调用编排器
 
     职责：
     1. 根据会话状态生成 Prompt
@@ -33,9 +31,8 @@ class LLMOrchestrator:
         self,
         session,
         user_input: str,
-    ) -> Dict[str, Any]:
-        """
-        生成AI回复（完整流程）
+    ) -> dict[str, Any]:
+        """生成AI回复（完整流程）
 
         返回: {"ai_response": str, "status": "ok" | "warning"}
         """
@@ -58,8 +55,7 @@ class LLMOrchestrator:
         session,
         user_input: str,
     ) -> str:
-        """
-        生成AI回复（只返回文本，不返回状态）
+        """生成AI回复（只返回文本，不返回状态）
 
         失败时返回兜底提示。
         """

@@ -1,8 +1,8 @@
 """创建会话用例"""
 import uuid
 
-from app.domain.repositories.session_repository import SessionRepository
 from ai_engine.core.state_machine import SessionState
+from app.domain.repositories.session_repository import SessionRepository
 
 
 class CreateSessionUseCase:

@@ -1,6 +1,6 @@
 """模式处理器基类"""
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Any
 
 from ..state_machine import SessionState, TaskMode
 
@@ -11,17 +11,16 @@ class ModeHandler(ABC):
     职责：处理特定 TaskMode 下的用户输入，判断状态流转，
     返回是否需要 LLM 生成回复。
     """
-    
+
     @property
     @abstractmethod
     def mode(self) -> TaskMode:
         """该处理器负责的模式"""
         pass
-    
+
     @abstractmethod
-    def handle(self, session: SessionState, user_input: str) -> Dict[str, Any]:
-        """
-        处理用户输入
+    def handle(self, session: SessionState, user_input: str) -> dict[str, Any]:
+        """处理用户输入
         
         Returns:
             {
@@ -30,9 +29,10 @@ class ModeHandler(ABC):
                 "transferred_to": TaskMode | None, # 状态流转目标模式
                 "status": str,                    # "ok" / "error"
             }
+
         """
         pass
-    
+
     def _extract_topic(self, text: str) -> str:
         """从用户输入中提取作文题目"""
         if "《" in text and "》" in text:

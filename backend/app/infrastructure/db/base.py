@@ -1,6 +1,6 @@
 """数据库连接与基类"""
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.infrastructure.config.settings import get_settings
 

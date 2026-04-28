@@ -1,14 +1,11 @@
+"""卡壳类型分类器 - 基于规则和关键词识别6种卡壳类型
 """
-卡壳类型分类器 - 基于规则和关键词识别6种卡壳类型
-"""
-import re
-from typing import Tuple, Optional
 from .state_machine import StuckType
 
 
 class StuckClassifier:
     """卡壳类型分类器"""
-    
+
     # 各类型关键词映射
     KEYWORDS = {
         StuckType.TYPE_1_PLOT: [
@@ -42,35 +39,34 @@ class StuckClassifier:
             "想法怎么写", "心理变化", "内心独白"
         ],
     }
-    
+
     # 结尾相关关键词（用于判断是否要进入结尾模块）
     ENDING_KEYWORDS = [
         "结尾", "不会结尾", "怎么结尾", "怎么收束", "怎么收尾",
         "最后一段", "结尾怎么写", "不知道怎么结束", "不会收尾",
         "不会结尾", "结尾卡了", "最后怎么写"
     ]
-    
+
     def __init__(self):
         self.keywords = self.KEYWORDS
         self.ending_keywords = self.ENDING_KEYWORDS
-    
-    def classify(self, user_input: str, written_content: str = "") -> Tuple[Optional[StuckType], float]:
-        """
-        分类卡壳类型
+
+    def classify(self, user_input: str, written_content: str = "") -> tuple[StuckType | None, float]:
+        """分类卡壳类型
         返回: (卡壳类型, 置信度)
         """
         user_input = user_input.lower()
-        
+
         # 首先检查是否是结尾相关
         if self._contains_any(user_input, self.ending_keywords):
             return None, -1.0  # 返回特殊标记，表示应进入结尾模块
-        
+
         # 计算各类型匹配度
         scores = {}
         for stuck_type, keywords in self.keywords.items():
             score = self._calculate_score(user_input, keywords)
             scores[stuck_type] = score
-        
+
         # 同时考虑已写内容的长度来辅助判断
         if written_content:
             content_length = len(written_content.strip())
@@ -78,20 +74,20 @@ class StuckClassifier:
                 # 如果已经写了很多，但还在问"怎么写"，可能是细节展开卡
                 if scores.get(StuckType.TYPE_2_DETAIL, 0) > 0:
                     scores[StuckType.TYPE_2_DETAIL] += 0.5
-        
+
         # 选择最高分
         if not scores:
             return None, 0.0
-        
+
         best_type = max(scores, key=scores.get)
         best_score = scores[best_type]
-        
+
         # 如果最高分太低，返回未知
         if best_score < 0.3:
             return None, best_score
-        
+
         return best_type, best_score
-    
+
     def _calculate_score(self, text: str, keywords: list) -> float:
         """计算文本与关键词集合的匹配度"""
         matched = 0
@@ -100,11 +96,11 @@ class StuckClassifier:
                 matched += 1
         # 归一化分数
         return min(matched / 2, 1.0)  # 匹配2个关键词即满分
-    
+
     def _contains_any(self, text: str, keywords: list) -> bool:
         """检查文本是否包含任意关键词"""
         return any(keyword in text for keyword in keywords)
-    
+
     def get_type_description(self, stuck_type: StuckType) -> str:
         """获取卡壳类型的描述"""
         descriptions = {

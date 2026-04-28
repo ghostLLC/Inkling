@@ -1,13 +1,12 @@
-"""
-Inkling 后端启动入口
+"""Inkling 后端启动入口
 
 使用方式:
     cd D:\\Inkling
     python -m backend.main          # 开发模式
     uvicorn backend.main:app        # 生产模式
 """
-import sys
 import os
+import sys
 
 # 确保项目根目录和 backend 目录在 sys.path 中
 _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

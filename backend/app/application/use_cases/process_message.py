@@ -1,9 +1,9 @@
 """处理用户消息用例"""
-from typing import Dict, Any
+from typing import Any
 
-from app.domain.repositories.session_repository import SessionRepository
 from ai_engine.core import SessionManager
 from ai_engine.core.llm_provider import LLMProvider
+from app.domain.repositories.session_repository import SessionRepository
 
 
 class ProcessMessageUseCase:
@@ -15,7 +15,7 @@ class ProcessMessageUseCase:
         # SessionManager 内部包含状态机、分类器、生成器等
         self.manager = SessionManager(llm_provider)
 
-    def execute(self, session_id: str, message: str) -> Dict[str, Any]:
+    def execute(self, session_id: str, message: str) -> dict[str, Any]:
         # 1. 从数据库加载会话状态
         session = self.repo.get_by_id(session_id)
         if not session:

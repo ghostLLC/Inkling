@@ -1,13 +1,11 @@
 """Prompt 构建器 - 统一管理所有 Prompt 模板"""
 import os
-from typing import Dict, List, Optional
 
-from ai_engine.core.state_machine import SessionState, TaskMode, GuideLevel, StuckType
+from ai_engine.core.state_machine import GuideLevel, SessionState, StuckType, TaskMode
 
 
 class PromptBuilder:
-    """
-    Prompt 构建器
+    """Prompt 构建器
 
     职责：
     1. 从 prompts/ 目录加载所有模板文件
@@ -39,13 +37,13 @@ class PromptBuilder:
         └── inactive.md
     """
 
-    def __init__(self, prompts_dir: Optional[str] = None):
+    def __init__(self, prompts_dir: str | None = None):
         if prompts_dir is None:
             # 从 backend/app/infrastructure/prompts/ 向上到项目根目录的 ai_engine/prompts/
             project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
             prompts_dir = os.path.join(project_root, "ai_engine", "prompts")
         self.prompts_dir = prompts_dir
-        self._cache: Dict[str, str] = {}
+        self._cache: dict[str, str] = {}
 
     def _load(self, *parts: str) -> str:
         """加载模板文件，带缓存"""
@@ -53,7 +51,7 @@ class PromptBuilder:
         if key not in self._cache:
             path = os.path.join(self.prompts_dir, *parts)
             if os.path.exists(path):
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, encoding="utf-8") as f:
                     self._cache[key] = f.read()
             else:
                 self._cache[key] = ""
@@ -91,7 +89,7 @@ class PromptBuilder:
 
     # === 卡壳类型策略 ===
 
-    def stuck_type_instruction(self, stuck_type: Optional[StuckType]) -> str:
+    def stuck_type_instruction(self, stuck_type: StuckType | None) -> str:
         """获取卡壳类型策略"""
         if not stuck_type:
             return "等待分类器识别卡壳类型。"
@@ -119,12 +117,12 @@ class PromptBuilder:
 
     # === 组装方法 ===
 
-    def build(self, session: SessionState, user_input: str) -> Dict[str, str]:
-        """
-        根据会话状态构建完整 prompt
+    def build(self, session: SessionState, user_input: str) -> dict[str, str]:
+        """根据会话状态构建完整 prompt
 
         Returns:
             {"system": str, "user": str}
+
         """
         mode = session.task_mode
 
@@ -166,7 +164,7 @@ class PromptBuilder:
 
     def _build_user_prompt(self, session: SessionState, user_input: str) -> str:
         """构建 user prompt（上下文 + 用户输入）"""
-        parts: List[str] = []
+        parts: list[str] = []
 
         # 作文题目
         if session.topic:

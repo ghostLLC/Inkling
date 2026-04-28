@@ -1,10 +1,8 @@
+"""SessionManager 单元测试（重构版）
 """
-SessionManager 单元测试（重构版）
-"""
-import pytest
-from ai_engine.core.session_manager import SessionManager
 from ai_engine.core.llm_provider import MockProvider
-from ai_engine.core.state_machine import TaskMode, GuideLevel
+from ai_engine.core.session_manager import SessionManager
+from ai_engine.core.state_machine import TaskMode
 
 
 class TestSessionManager:

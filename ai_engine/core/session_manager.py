@@ -1,5 +1,4 @@
-"""
-会话管理器 - 协调层（重构版）
+"""会话管理器 - 协调层（重构版）
 
 职责（更薄）：
 1. 创建/获取会话
@@ -10,19 +9,18 @@
 - core/pipeline/   - 安全流水线 + LLM编排器
 """
 import uuid
-from typing import Optional, Dict, Any
+from typing import Any
 
-from .state_machine import StateMachine, SessionState, TaskMode
-from .stuck_classifier import StuckClassifier
-from .guide_generator import GuideGenerator
 from .content_guard import ContentGuard
-from .llm_provider import LLMProvider
-from .pipeline import SecurityPipeline, LLMOrchestrator
-
-from .handlers.topic_analysis import TopicAnalysisHandler
-from .handlers.stuck_rescue import StuckRescueHandler
-from .handlers.ending_guide import EndingGuideHandler
+from .guide_generator import GuideGenerator
 from .handlers.complete import CompleteHandler
+from .handlers.ending_guide import EndingGuideHandler
+from .handlers.stuck_rescue import StuckRescueHandler
+from .handlers.topic_analysis import TopicAnalysisHandler
+from .llm_provider import LLMProvider
+from .pipeline import LLMOrchestrator, SecurityPipeline
+from .state_machine import SessionState, StateMachine, TaskMode
+from .stuck_classifier import StuckClassifier
 
 
 class SessionManager:
@@ -49,7 +47,7 @@ class SessionManager:
             TaskMode.COMPLETE: CompleteHandler(),
         }
 
-    def create_session(self, topic: Optional[str] = None) -> str:
+    def create_session(self, topic: str | None = None) -> str:
         """创建新会话"""
         session_id = str(uuid.uuid4())[:8]
         session = self.state_machine.create_session(session_id)
@@ -57,9 +55,8 @@ class SessionManager:
             session.topic = topic
         return session_id
 
-    def process(self, session_id: str, user_input: str) -> Dict[str, Any]:
-        """
-        处理用户输入，返回AI回复
+    def process(self, session_id: str, user_input: str) -> dict[str, Any]:
+        """处理用户输入，返回AI回复
 
         流程：安全检查 → 模式分发 → Handler处理 → LLM编排 → 记录
         """
@@ -111,10 +108,9 @@ class SessionManager:
         session: SessionState,
         session_id: str,
         user_input: str,
-        handler_result: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        handler_result: dict[str, Any],
+    ) -> dict[str, Any]:
         """处理 Handler 返回结果"""
-
         # 如果 Handler 已经提供了固定回复，直接返回
         if not handler_result.get("requires_llm", False):
             return self._build_result(
@@ -132,7 +128,7 @@ class SessionManager:
             status=llm_result["status"],
         )
 
-    def _handle_unknown_mode(self, session: SessionState, user_input: str) -> Dict[str, Any]:
+    def _handle_unknown_mode(self, session: SessionState, user_input: str) -> dict[str, Any]:
         """处理未知模式"""
         return self._build_result(
             session, session.session_id,
@@ -146,8 +142,8 @@ class SessionManager:
         session_id: str,
         ai_response: str,
         status: str,
-        cool_down: Optional[bool] = None,
-    ) -> Dict[str, Any]:
+        cool_down: bool | None = None,
+    ) -> dict[str, Any]:
         """构建统一返回格式"""
         return {
             "session_id": session_id,
@@ -159,7 +155,7 @@ class SessionManager:
             "status": status,
         }
 
-    def get_session_info(self, session_id: str) -> Optional[Dict]:
+    def get_session_info(self, session_id: str) -> dict | None:
         """获取会话信息"""
         session = self.state_machine.get_session(session_id)
         if not session:

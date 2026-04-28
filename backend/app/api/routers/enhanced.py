@@ -1,15 +1,14 @@
+"""增强功能路由 - 五大模块 API
 """
-增强功能路由 - 五大模块 API
-"""
-from typing import Optional, List
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from ai_engine.core.content_analyzer import ContentAnalyzer
+from ai_engine.core.emotion_engine import EmotionEngine
 from ai_engine.core.progress_tracker import ProgressTracker
-from ai_engine.core.emotion_engine import EmotionEngine, EmotionLevel
+from ai_engine.core.review_generator import ReviewGenerator, StuckRecord, WritingSession
 from ai_engine.core.training_deck import TrainingDeck
-from ai_engine.core.review_generator import ReviewGenerator, WritingSession, StuckRecord
 
 router = APIRouter(prefix="/enhanced", tags=["enhanced"])
 
@@ -28,19 +27,19 @@ session_writing_sessions: dict = {}
 
 class AnalyzeRequest(BaseModel):
     text: str
-    cursor_pos: Optional[int] = None
+    cursor_pos: int | None = None
 
 
 class AnalyzeResponse(BaseModel):
-    stuck_type: Optional[str]
+    stuck_type: str | None
     stuck_confidence: float
     section: str
     section_progress: float
     word_count: int
     paragraph_count: int
     content_density: dict
-    emotion_signals: List[dict]
-    suggestions: List[str]
+    emotion_signals: list[dict]
+    suggestions: list[str]
 
 
 class ProgressResponse(BaseModel):
@@ -52,7 +51,7 @@ class ProgressResponse(BaseModel):
     target_words: int
     paragraph_count: int
     content_density: dict
-    milestones: List[dict]
+    milestones: list[dict]
     suggestion: str
     writing_duration: int
 
@@ -65,7 +64,7 @@ class EmotionCheckRequest(BaseModel):
 
 class EmotionResponse(BaseModel):
     level: str
-    signals: List[dict]
+    signals: list[dict]
     trigger_count: int
     encouragement: str
     should_cool_down: bool
@@ -78,9 +77,9 @@ class TrainingCardResponse(BaseModel):
     duration: int
     title: str
     task: str
-    constraints: List[str]
+    constraints: list[str]
     hint: str
-    example: Optional[str]
+    example: str | None
 
 
 class TrainingEvaluateRequest(BaseModel):
@@ -92,18 +91,18 @@ class TrainingEvaluateRequest(BaseModel):
 class TrainingEvaluateResponse(BaseModel):
     card_id: str
     skill_type: str
-    highlights: List[str]
-    suggestions: List[str]
+    highlights: list[str]
+    suggestions: list[str]
 
 
 class ReviewResponse(BaseModel):
     summary: dict
     stuck_analysis: dict
-    timeline: List[dict]
+    timeline: list[dict]
     emotion_summary: dict
     ability_analysis: dict
-    achievements: List[str]
-    suggested_training: Optional[str]
+    achievements: list[str]
+    suggested_training: str | None
 
 
 class ParentSummaryResponse(BaseModel):
@@ -112,8 +111,8 @@ class ParentSummaryResponse(BaseModel):
     word_count: int
     overview: str
     independence: str
-    improvement: Optional[str]
-    attention: Optional[str]
+    improvement: str | None
+    attention: str | None
 
 
 # === 模块一：卡壳类型智能识别 ===
@@ -127,17 +126,23 @@ async def analyze_content(req: AnalyzeRequest):
 
 # === 模块二：写作进度可视化 ===
 
-@router.post("/progress/{session_id}/update")
+class ProgressUpdateResponse(BaseModel):
+    progress: dict
+    new_milestones: list
+    writing_duration: int
+
+
+@router.post("/progress/{session_id}/update", response_model=ProgressUpdateResponse)
 async def update_progress(session_id: str, req: AnalyzeRequest):
     """更新写作进度"""
     if session_id not in progress_trackers:
         progress_trackers[session_id] = ProgressTracker()
         progress_trackers[session_id].start()
-    
+
     tracker = progress_trackers[session_id]
     analysis = content_analyzer.analyze(req.text, req.cursor_pos)
     newly_triggered = tracker.update(analysis)
-    
+
     return {
         "progress": tracker.get_progress_map(),
         "new_milestones": [
@@ -153,11 +158,11 @@ async def get_progress(session_id: str):
     """获取当前写作进度"""
     if session_id not in progress_trackers:
         raise HTTPException(status_code=404, detail="Progress not found")
-    
+
     tracker = progress_trackers[session_id]
     progress_map = tracker.get_progress_map()
     progress_map["writing_duration"] = tracker.get_writing_duration()
-    
+
     return ProgressResponse(**progress_map)
 
 
@@ -168,14 +173,14 @@ async def check_emotion(req: EmotionCheckRequest):
     """检测用户情绪状态"""
     if req.session_id not in emotion_engines:
         emotion_engines[req.session_id] = EmotionEngine()
-    
+
     engine = emotion_engines[req.session_id]
     analysis = content_analyzer.analyze(req.user_input)
     state = engine.analyze(req.user_input, req.help_round, analysis.emotion_signals)
-    
+
     stuck_type = None
     encouragement = engine.get_encouragement(stuck_type, state.level)
-    
+
     return EmotionResponse(
         level=state.level.value,
         signals=state.signals,
@@ -190,14 +195,14 @@ async def get_emotion_report(session_id: str):
     """获取情绪报告"""
     if session_id not in emotion_engines:
         return {"status": "no_data"}
-    
+
     return emotion_engines[session_id].get_emotion_report()
 
 
 # === 模块四：微写作训练舱 ===
 
 @router.get("/training/daily", response_model=TrainingCardResponse)
-async def get_daily_training(focus_skill: Optional[str] = None):
+async def get_daily_training(focus_skill: str | None = None):
     """获取每日训练卡片"""
     card = training_deck.get_daily_training(focus_skill=focus_skill)
     return TrainingCardResponse(
@@ -224,7 +229,7 @@ async def evaluate_training(req: TrainingEvaluateRequest):
     """评估训练结果"""
     result = training_deck.evaluate_training(req.card_id, req.user_text)
     training_deck.record_completion(req.session_id, req.card_id, req.user_text)
-    
+
     return TrainingEvaluateResponse(
         card_id=result["card_id"],
         skill_type=result["skill_type"],
@@ -234,7 +239,7 @@ async def evaluate_training(req: TrainingEvaluateRequest):
 
 
 @router.get("/training/cards/{skill_type}")
-async def get_training_cards(skill_type: str, difficulty: Optional[int] = None):
+async def get_training_cards(skill_type: str, difficulty: int | None = None):
     """获取指定技能的训练卡片列表"""
     cards = training_deck.get_skill_training(skill_type, difficulty)
     return [
@@ -270,9 +275,9 @@ async def record_stuck(
             topic="",
             start_time=__import__('datetime').datetime.now(),
         )
-    
+
     session = session_writing_sessions[session_id]
-    
+
     record = StuckRecord(
         timestamp=__import__('datetime').datetime.now(),
         stuck_type=stuck_type,
@@ -281,7 +286,7 @@ async def record_stuck(
         resolution_time=resolution_time,
     )
     session.stuck_records.append(record)
-    
+
     return {
         "recorded": True,
         "total_stuck_count": len(session.stuck_records),
@@ -297,23 +302,23 @@ async def complete_writing(
     """完成写作，生成分复盘数据"""
     if session_id not in session_writing_sessions:
         raise HTTPException(status_code=404, detail="Writing session not found")
-    
+
     session = session_writing_sessions[session_id]
     session.total_words = total_words
     session.total_duration = total_duration
     session.end_time = __import__('datetime').datetime.now()
-    
+
     if session_id in progress_trackers:
         session.progress_snapshots = progress_trackers[session_id].get_progress_timeline()
-    
+
     if session_id in emotion_engines:
         emotion_report = emotion_engines[session_id].get_emotion_report()
         session.emotion_events = [
             {"type": "emotion", "level": emotion_report.get("max_level_reached", "normal")}
         ]
-    
+
     review_generator.add_session(session)
-    
+
     return {
         "completed": True,
         "session_id": session_id,
@@ -328,7 +333,7 @@ async def get_review(session_id: str):
     review = review_generator.generate_review(session_id)
     if "error" in review:
         raise HTTPException(status_code=404, detail=review["error"])
-    
+
     return ReviewResponse(
         summary=review["summary"],
         stuck_analysis=review["stuck_analysis"],
@@ -346,7 +351,7 @@ async def get_parent_summary(session_id: str):
     summary = review_generator.generate_parent_summary(session_id)
     if "error" in summary:
         raise HTTPException(status_code=404, detail=summary["error"])
-    
+
     return ParentSummaryResponse(
         topic=summary["topic"],
         duration=summary["duration"],
@@ -375,21 +380,21 @@ async def sync_session_data(
 ):
     """同步会话数据（一次调用更新所有模块）"""
     analysis = content_analyzer.quick_analyze(text)
-    
+
     if session_id not in progress_trackers:
         progress_trackers[session_id] = ProgressTracker()
         progress_trackers[session_id].start()
-    
+
     tracker = progress_trackers[session_id]
     analysis_result = content_analyzer.analyze(text)
     newly_triggered = tracker.update(analysis_result)
-    
+
     if session_id not in emotion_engines:
         emotion_engines[session_id] = EmotionEngine()
-    
+
     engine = emotion_engines[session_id]
     emotion_state = engine.analyze(user_input, help_round, analysis_result.emotion_signals)
-    
+
     return {
         "analysis": analysis,
         "progress": tracker.get_progress_map(),

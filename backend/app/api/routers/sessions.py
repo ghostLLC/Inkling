@@ -1,23 +1,22 @@
 """会话路由 - 核心 API"""
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.infrastructure.db.base import get_db
-from app.infrastructure.config.settings import get_settings
-from app.infrastructure.repositories.sqlalchemy_session_repository import SQLAlchemySessionRepository
-from app.domain.repositories.session_repository import SessionRepository
 from app.application.use_cases.create_session import CreateSessionUseCase
-from app.application.use_cases.process_message import ProcessMessageUseCase
 from app.application.use_cases.get_session_info import GetSessionInfoUseCase
+from app.application.use_cases.process_message import ProcessMessageUseCase
+from app.domain.repositories.session_repository import SessionRepository
+from app.infrastructure.config.settings import get_settings
+from app.infrastructure.db.base import get_db
+from app.infrastructure.repositories.sqlalchemy_session_repository import SQLAlchemySessionRepository
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 
 class CreateSessionRequest(BaseModel):
-    topic: Optional[str] = None
+    topic: str | None = None
 
 
 class MessageRequest(BaseModel):
@@ -30,14 +29,14 @@ class ChatResponse(BaseModel):
     task_mode: str
     ai_response: str
     current_level: int
-    stuck_type: Optional[str]
+    stuck_type: str | None
     cool_down: bool
     status: str
 
 
 class SessionInfoResponse(BaseModel):
     session_id: str
-    topic: Optional[str]
+    topic: str | None
     task_mode: str
     current_level: int
     stuck_count: int

@@ -1,17 +1,14 @@
-"""
-统一日志配置
+"""统一日志配置
 """
 import logging
 import sys
-from typing import Optional
 
 
 def setup_logging(
     level: str = "INFO",
-    format_string: Optional[str] = None,
+    format_string: str | None = None,
 ) -> None:
-    """
-    配置应用日志
+    """配置应用日志
     
     输出到 stdout，便于容器环境收集
     """

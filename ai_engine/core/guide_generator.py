@@ -1,39 +1,37 @@
-"""
-引导生成器 - 组装Prompt并生成AI回复
+"""引导生成器 - 组装Prompt并生成AI回复
 """
 import os
-from typing import Dict, List, Optional
-from .state_machine import SessionState, TaskMode, GuideLevel, StuckType
+
+from .state_machine import GuideLevel, SessionState, StuckType, TaskMode
 
 
 class GuideGenerator:
     """分层引导生成器"""
-    
-    def __init__(self, prompts_dir: Optional[str] = None):
+
+    def __init__(self, prompts_dir: str | None = None):
         if prompts_dir is None:
             prompts_dir = os.path.join(os.path.dirname(__file__), "..", "prompts")
         self.prompts_dir = prompts_dir
         self.system_prompt = self._load_system_prompt()
-    
+
     def _load_system_prompt(self) -> str:
         """加载系统Prompt"""
         path = os.path.join(self.prompts_dir, "system_prompt.md")
         if os.path.exists(path):
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, encoding='utf-8') as f:
                 return f.read()
         # 默认系统Prompt
         return """你是初中生的写作陪练助手，名字叫"写作小救星"。
 你的任务是在学生写作卡壳时，通过分层引导帮助其恢复思路、继续独立完成作文。
 请不要直接输出超过2个完整示例句，不要直接续写学生的正文段落。
 """
-    
-    def generate(self, session: SessionState, user_input: str, llm_response: Optional[str] = None) -> Dict:
-        """
-        根据会话状态生成完整的Prompt
+
+    def generate(self, session: SessionState, user_input: str, llm_response: str | None = None) -> dict:
+        """根据会话状态生成完整的Prompt
         返回: {"system": str, "user": str, "context": str}
         """
         mode = session.task_mode
-        
+
         if mode == TaskMode.TOPIC_ANALYSIS:
             return self._generate_topic_prompt(session, user_input)
         elif mode == TaskMode.STUCK_RESCUE:
@@ -42,8 +40,8 @@ class GuideGenerator:
             return self._generate_ending_prompt(session, user_input)
         else:
             return self._generate_complete_prompt(session, user_input)
-    
-    def _generate_topic_prompt(self, session: SessionState, user_input: str) -> Dict:
+
+    def _generate_topic_prompt(self, session: SessionState, user_input: str) -> dict:
         """生成审题立意阶段的Prompt"""
         system = self.system_prompt + """
 
@@ -71,7 +69,7 @@ class GuideGenerator:
 3. → ...
 结尾提醒：→ ...
 """
-        
+
         # 构建用户上下文
         context = f"作文题目：{session.topic}\n" if session.topic else ""
         if session.conversation_history:
@@ -81,16 +79,16 @@ class GuideGenerator:
             for msg in recent:
                 prefix = "学生" if msg["role"] == "user" else "你"
                 context += f"{prefix}：{msg['content']}\n"
-        
+
         user_prompt = f"{context}\n学生当前输入：{user_input}\n\n请根据审题立意策略回复。"
-        
+
         return {"system": system, "user": user_prompt}
-    
-    def _generate_stuck_prompt(self, session: SessionState, user_input: str) -> Dict:
+
+    def _generate_stuck_prompt(self, session: SessionState, user_input: str) -> dict:
         """生成卡壳救援阶段的Prompt"""
         stuck_type = session.current_stuck_type
         level = session.current_level
-        
+
         system = self.system_prompt + f"""
 
 ## 当前模式：写作中途卡壳救援
@@ -117,16 +115,16 @@ class GuideGenerator:
 ### 卡壳类型处理策略
 {self._get_stuck_type_instruction(stuck_type)}
 """
-        
+
         context = f"作文题目：{session.topic}\n\n" if session.topic else ""
         if session.written_content:
             context += f"学生已写内容：\n{session.written_content[:500]}\n\n"  # 限制长度
-        
+
         user_prompt = f"{context}学生卡壳描述：{user_input}\n\n请根据分层引导策略回复。"
-        
+
         return {"system": system, "user": user_prompt}
-    
-    def _generate_ending_prompt(self, session: SessionState, user_input: str) -> Dict:
+
+    def _generate_ending_prompt(self, session: SessionState, user_input: str) -> dict:
         """生成结尾收束阶段的Prompt"""
         system = self.system_prompt + """
 
@@ -149,18 +147,18 @@ class GuideGenerator:
 ### 点题提醒
 结尾3-5句话即可，不要写太长。重点是把"点题"的那句话说清楚。
 """
-        
+
         context = f"作文题目：{session.topic}\n\n学生已写全文：\n{session.written_content[:600]}\n\n"
         user_prompt = f"{context}学生当前需求：{user_input}\n\n请帮助选择结尾策略并给出引导。"
-        
+
         return {"system": system, "user": user_prompt}
-    
-    def _generate_complete_prompt(self, session: SessionState, user_input: str) -> Dict:
+
+    def _generate_complete_prompt(self, session: SessionState, user_input: str) -> dict:
         """生成写作完成后的Prompt"""
         system = self.system_prompt + "\n\n学生已完成写作，提供轻量鼓励即可。"
         user_prompt = f"学生说：{user_input}\n\n请给出简短鼓励。"
         return {"system": system, "user": user_prompt}
-    
+
     def _get_level_instruction(self, level: GuideLevel) -> str:
         """获取指定层级的指令"""
         instructions = {
@@ -190,7 +188,7 @@ L4 - 示例句（严格限制）：
 请不要给可直接照搬的完整句子。""",
         }
         return instructions.get(level, "")
-    
+
     def _get_cooldown_instruction(self) -> str:
         """获取冷却指令"""
         return """
@@ -204,12 +202,12 @@ L4 - 示例句（严格限制）：
 请不要：追问学生新的问题。
 请不要：解释或展开之前的提示。
 """
-    
-    def _get_stuck_type_instruction(self, stuck_type: Optional[StuckType]) -> str:
+
+    def _get_stuck_type_instruction(self, stuck_type: StuckType | None) -> str:
         """获取指定卡壳类型的处理策略"""
         if not stuck_type:
             return "等待分类器识别卡壳类型。"
-        
+
         instructions = {
             StuckType.TYPE_1_PLOT: """
 【情节推进卡】

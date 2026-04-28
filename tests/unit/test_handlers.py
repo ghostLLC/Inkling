@@ -1,15 +1,12 @@
+"""Handlers 单元测试
 """
-Handlers 单元测试
-"""
-import pytest
 from ai_engine.core.handlers import (
-    TopicAnalysisHandler,
-    StuckRescueHandler,
-    EndingGuideHandler,
     CompleteHandler,
+    EndingGuideHandler,
+    StuckRescueHandler,
+    TopicAnalysisHandler,
 )
-from ai_engine.core.state_machine import SessionState, TaskMode, GuideLevel
-from ai_engine.core.stuck_classifier import StuckClassifier
+from ai_engine.core.state_machine import GuideLevel, SessionState, TaskMode
 
 
 class TestTopicAnalysisHandler:

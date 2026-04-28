@@ -1,29 +1,29 @@
 """卡壳救援模式处理器"""
-from typing import Dict, Any, Optional
+from typing import Any
 
-from ..state_machine import SessionState, TaskMode, GuideLevel
+from ..state_machine import GuideLevel, SessionState, TaskMode
 from ..stuck_classifier import StuckClassifier
 from .base import ModeHandler
 
 
 class StuckRescueHandler(ModeHandler):
     """卡壳救援阶段处理器"""
-    
+
     @property
     def mode(self) -> TaskMode:
         return TaskMode.STUCK_RESCUE
-    
-    def __init__(self, classifier: Optional[StuckClassifier] = None):
+
+    def __init__(self, classifier: StuckClassifier | None = None):
         self.classifier = classifier or StuckClassifier()
-    
+
     # 完成写作的信号词
     _complete_signals = ["写完了", "完成了", "搞定了"]
     # 求助词（排除误触完成）
     _help_words = ["不会", "怎么"]
     # 层级推进信号
     _stuck_signals = ["还是不会", "还是不懂", "还是不知道", "还是卡", "更迷糊了", "没懂"]
-    
-    def handle(self, session: SessionState, user_input: str) -> Dict[str, Any]:
+
+    def handle(self, session: SessionState, user_input: str) -> dict[str, Any]:
         # 1. 检查是否进入结尾阶段（正文写完后）
         if self._is_ending_request(user_input):
             if session.has_body:
@@ -41,7 +41,7 @@ class StuckRescueHandler(ModeHandler):
                     "transferred_to": None,
                     "status": "ok",
                 }
-        
+
         # 2. 检查是否直接完成写作
         if self._is_complete_signal(user_input):
             session.complete_writing()
@@ -51,14 +51,14 @@ class StuckRescueHandler(ModeHandler):
                 "transferred_to": TaskMode.COMPLETE,
                 "status": "ok",
             }
-        
+
         # 3. 更新已写内容（长文本 + 不含"题目"）
         if len(user_input) > 50 and "题目" not in user_input:
             session.update_written_content(user_input)
-        
+
         # 4. 识别卡壳类型（新卡点）
         self._classify_if_new(session, user_input)
-        
+
         # 5. 检查冷却
         if session.should_cool_down():
             session.reset_level()
@@ -69,11 +69,11 @@ class StuckRescueHandler(ModeHandler):
                 "cool_down": True,
                 "status": "ok",
             }
-        
+
         # 6. 检查层级推进
         if any(s in user_input for s in self._stuck_signals):
             session.advance_level()
-        
+
         # 7. 需要 LLM 生成引导回复
         return {
             "ai_response": None,
@@ -81,20 +81,20 @@ class StuckRescueHandler(ModeHandler):
             "transferred_to": None,
             "status": "ok",
         }
-    
+
     def _is_ending_request(self, user_input: str) -> bool:
         """判断用户是否想进入结尾阶段"""
         return self.classifier._contains_any(
             user_input.lower(),
             self.classifier.ending_keywords
         )
-    
+
     def _is_complete_signal(self, user_input: str) -> bool:
         """判断用户是否表示写作完成"""
         has_signal = any(s in user_input for s in self._complete_signals)
         has_help = any(w in user_input for w in self._help_words)
         return has_signal and not has_help
-    
+
     def _classify_if_new(self, session: SessionState, user_input: str) -> None:
         """如果是新卡壳点，识别类型"""
         if session.stuck_count == 0 or session.current_stuck_type is None:

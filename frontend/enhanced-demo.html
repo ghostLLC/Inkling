@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 写作卡壳救援助手 - 增强功能 Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .header p { font-size: 16px; opacity: 0.9; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .card h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card h2 .icon { font-size: 24px; }
+        
+        /* 模块一：卡壳识别 */
+        .stuck-detector {
+            border-left: 4px solid #667eea;
+        }
+        
+        .detection-result {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+        
+        .confidence-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        /* 模块二：进度可视化 */
+        .progress-visual {
+            border-left: 4px solid #48bb78;
+        }
+        
+        .progress-track {
+            display: flex;
+            align-items: center;
+            margin: 16px 0;
+            gap: 4px;
+        }
+        
+        .progress-segment {
+            flex: 1;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-segment.intro { background: #e0e0e0; color: #666; }
+        .progress-segment.intro.active { background: #48bb78; }
+        .progress-segment.intro.completed { background: #38a169; }
+        
+        .progress-segment.body { background: #e0e0e0; color: #666; }
+        .progress-segment.body.active { background: #4299e1; }
+        .progress-segment.body.completed { background: #3182ce; }
+        
+        .progress-segment.ending { background: #e0e0e0; color: #666; }
+        .progress-segment.ending.active { background: #ed8936; }
+        .progress-segment.ending.completed { background: #dd6b20; }
+        
+        .density-bars {
+            margin-top: 16px;
+        }
+        
+        .density-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 8px 0;
+        }
+        
+        .density-label {
+            width: 60px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .density-bar {
+            flex: 1;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .density-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .density-fill.narrative { background: #48bb78; }
+        .density-fill.description { background: #4299e1; }
+        .density-fill.dialogue { background: #ed8936; }
+        .density-fill.psychology { background: #9f7aea; }
+        
+        .density-value {
+            width: 40px;
+            text-align: right;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        /* 模块三：情绪感知 */
+        .emotion-sense {
+            border-left: 4px solid #ed8936;
+        }
+        
+        .emotion-display {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-top: 12px;
+        }
+        
+        .emotion-emoji {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+        
+        .emotion-level {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .emotion-text {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            font-style: italic;
+        }
+        
+        .emotion-normal { color: #48bb78; }
+        .emotion-light { color: #ecc94b; }
+        .emotion-medium { color: #ed8936; }
+        .emotion-heavy { color: #e53e3e; }
+        
+        /* 模块四：训练舱 */
+        .training-deck {
+            border-left: 4px solid #9f7aea;
+        }
+        
+        .training-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+            border: 2px solid transparent;
+            transition: border-color 0.3s;
+        }
+        
+        .training-card:hover {
+            border-color: #9f7aea;
+        }
+        
+        .training-card .title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .training-card .task {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        
+        .training-card .constraints {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        
+        .constraint-tag {
+            font-size: 12px;
+            padding: 4px 10px;
+            background: #e9d8fd;
+            color: #6b46c1;
+            border-radius: 12px;
+        }
+        
+        .training-card .hint {
+            font-size: 13px;
+            color: #9f7aea;
+            font-style: italic;
+        }
+        
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .skill-item {
+            text-align: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .skill-name {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        
+        .skill-level {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .skill-level.beginner { background: #fef3c7; color: #92400e; }
+        .skill-level.developing { background: #dbeafe; color: #1e40af; }
+        .skill-level.proficient { background: #d1fae5; color: #065f46; }
+        .skill-level.locked { background: #f3f4f6; color: #9ca3af; }
+        
+        /* 模块五：复盘 */
+        .review-panel {
+            border-left: 4px solid #38a169;
+            grid-column: 1 / -1;
+        }
+        
+        .review-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .review-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .review-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #38a169;
+            margin-bottom: 4px;
+        }
+        
+        .review-label {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .timeline {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-left: 2px solid #e0e0e0;
+            padding-left: 16px;
+            position: relative;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+        
+        .timeline-item.resolved::before { background: #48bb78; }
+        .timeline-item.stuck::before { background: #ed8936; }
+        
+        .timeline-time {
+            font-size: 12px;
+            color: #999;
+            width: 50px;
+        }
+        
+        .timeline-content {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        /* 输入区 */
+        .input-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .input-section h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 16px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .suggestion-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        
+        .chip {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .chip:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-in {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .review-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI 写作卡壳救援助手 - 增强版</h1>
+            <p>五大模块功能演示：智能识别 · 进度可视化 · 情绪感知 · 微训练 · 过程复盘</p>
+        </div>
+        
+        <!-- 输入区 -->
+        <div class="input-section">
+            <h2>📝 粘贴你的作文内容</h2>
+            <textarea id="writingInput" placeholder="在这里粘贴你当前写的作文内容，AI会自动分析卡壳类型、写作进度、内容密度和情绪状态...">
+那是一个周末的下午，我和妈妈一起去超市买东西。天气很热，太阳很大，我们走了很久才到。超市里人很多，我们买了一些水果和零食。结账的时候，队伍很长，我们等了很久。我觉得很累，就坐在旁边的椅子上休息。妈妈看着我，笑了笑。那一刻，我突然觉得她老了。后面不知道怎么写了。</textarea>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="analyzeWriting()">🔍 智能分析</button>
+                <button class="btn btn-secondary" onclick="simulateProgress()">📊 模拟进度</button>
+                <button class="btn btn-secondary" onclick="showEmotion()">💭 情绪检测</button>
+                <button class="btn btn-secondary" onclick="loadTraining()">🎯 微训练</button>
+                <button class="btn btn-secondary" onclick="generateReview()">📈 生成复盘</button>
+            </div>
+            <div class="suggestion-chips">
+                <span class="chip" onclick="loadSample('sample1')">示例：卡壳开头</span>
+                <span class="chip" onclick="loadSample('sample2')">示例：中段断层</span>
+                <span class="chip" onclick="loadSample('sample3')">示例：描写空洞</span>
+                <span class="chip" onclick="loadSample('sample4')">示例：结尾困难</span>
+                <span class="chip" onclick="loadSample('sample5')">示例：情绪挫败</span>
+            </div>
+        </div>
+        
+        <!-- 五大模块展示 -->
+        <div class="grid" style="margin-top: 20px;">
+            <!-- 模块一：卡壳类型智能识别 -->
+            <div class="card stuck-detector">
+                <h2><span class="icon">🎯</span> 卡壳类型智能识别</h2>
+                <div id="stuckResult">
+                    <p style="color: #999; font-size: 14px;">点击"智能分析"查看结果</p>
+                </div>
+            </div>
+            
+            <!-- 模块二：写作进度可视化 -->
+            <div class="card progress-visual">
+                <h2><span class="icon">📊</span> 写作进度可视化</h2>
+                <div id="progressResult">
+                    <div class="progress-track">
+                        <div class="progress-segment intro active">开头</div>
+                        <div class="progress-segment body">中段</div>
+                        <div class="progress-segment ending">结尾</div>
+                    </div>
+                    <p style="color: #999; font-size: 14px; text-align: center;">点击"模拟进度"或"智能分析"更新</p>
+                </div>
+            </div>
+            
+            <!-- 模块三：情绪感知与鼓励 -->
+            <div class="card emotion-sense">
+                <h2><span class="icon">💝</span> 情绪感知与鼓励</h2>
+                <div id="emotionResult">
+                    <div class="emotion-display">
+                        <div class="emotion-emoji">😐</div>
+                        <div class="emotion-level emotion-normal">状态正常</div>
+                        <div class="emotion-text">输入内容后检测情绪状态</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 模块四：微写作训练舱 -->
+            <div class="card training-deck">
+                <h2><span class="icon">🎓</span> 微写作训练舱</h2>
+                <div id="trainingResult">
+                    <p style="color: #999; font-size: 14px;">点击"微训练"加载训练卡片</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 模块五：写后过程复盘 -->
+        <div class="card review-panel">
+            <h2><span class="icon">📈</span> 写后过程复盘</h2>
+            <div id="reviewResult">
+                <p style="color: #999; font-size: 14px;">点击"生成复盘"查看过程分析报告</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        
+        // 示例文本
+        const samples = {
+            sample1: "作文题目：那一刻，我长大了\n\n我不知道该怎么开头。",
+            sample2: "那是一个周末的下午，我和妈妈一起去超市买东西。天气很热，太阳很大，我们走了很久才到。超市里人很多，我们买了一些水果和零食。\n\n然后...",
+            sample3: "我很紧张，非常紧张，特别紧张。心很慌，腿很软。我不知道该怎么办。\n\n（不知道怎么展开描写）",
+            sample4: "经过这件事，我明白了妈妈的辛苦。\n\n（正文只有50字，不知道怎么结尾）",
+            sample5: "写不下去了，太难了，我还是不会，怎么办啊，不想写了..."
+        };
+        
+        function loadSample(key) {
+            document.getElementById('writingInput').value = samples[key];
+        }
+        
+        async function analyzeWriting() {
+            const text = document.getElementById('writingInput').value;
+            if (!text.trim()) {
+                alert('请先输入作文内容');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/enhanced/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const data = await res.json();
+                
+                const stuckHtml = `
+                    <div class="detection-result animate-in">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: #667eea; font-size: 16px;">${data.stuck_type || '情节推进卡'}</strong>
+                            <span style="font-size: 13px; color: #666;">信心度 ${Math.round(data.stuck_confidence * 100)}%</span>
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${data.stuck_confidence * 100}%"></div>
+                        </div>
+                        <div style="margin-top: 12px; font-size: 13px; color: #666;">
+                            <div>📍 当前段落：${data.section}（${Math.round(data.section_progress * 100)}%）</div>
+                            <div>📝 字数：${data.word_count} 字 | 段落：${data.paragraph_count} 段</div>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <strong style="font-size: 13px; color: #333;">💡 建议：</strong>
+                            <ul style="margin: 4px 0 0 16px; font-size: 13px; color: #666;">
+                                ${data.suggestions.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('stuckResult').innerHTML = stuckHtml;
+                updateProgressVisual(data);
+                
+            } catch (e) {
+                console.error(e);
+                document.getElementById('stuckResult').innerHTML = '<p style="color: #e53e3e;">分析失败，请检查服务器</p>';
+            }
+        }
+        
+        function updateProgressVisual(data) {
+            const section = data.section;
+            const progress = data.section_progress;
+            
+            const introClass = section === '开头' ? 'active' : (section === '中段' || section === '结尾') ? 'completed' : '';
+            const bodyClass = section === '中段' ? 'active' : section === '结尾' ? 'completed' : '';
+            const endingClass = section === '结尾' ? 'active' : '';
+            
+            const density = data.content_density;
+            
+            const html = `
+                <div class="animate-in">
+                    <div class="progress-track">
+                        <div class="progress-segment intro ${introClass}">
+                            ${introClass === 'active' ? '开头 ' + Math.round(progress * 100) + '%' : introClass === 'completed' ? '✓ 开头' : '开头'}
+                        </div>
+                        <div class="progress-segment body ${bodyClass}">
+                            ${bodyClass === 'active' ? '中段 ' + Math.round(progress * 100) + '%' : bodyClass === 'completed' ? '✓ 中段' : '中段'}
+                        </div>
+                        <div class="progress-segment ending ${endingClass}">
+                            ${endingClass === 'active' ? '结尾 ' + Math.round(progress * 100) + '%' : '结尾'}
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 8px 0; font-size: 13px; color: #666;">
+                        总进度：${Math.round(data.word_count / 650 * 100)}%（${data.word_count}/650字）
+                    </div>
+                    
+                    <div class="density-bars">
+                        <div class="density-item">
+                            <span class="density-label">叙事</span>
+                            <div class="density-bar"><div class="density-fill narrative" style="width: ${density.narrative * 100}%"></div></div>
+                            <span class="density-value">${Math.round(density.narrative * 100)}%</span>
+                        </div>
+                        <div class="density-item">
+                            <span class="density-label">描写</span>
+                            <div class="density-bar"><div class="density-fill description" style="width: ${density.description * 100}%"></div></div>
+                            <span class="density-value">${Math.round(density.description * 100)}%</span>
+                        </div>
+                        <div class="density-item">
+                            <span class="density-label">对话</span>
+                            <div class="density-bar"><div class="density-fill dialogue" style="width: ${density.dialogue * 100}%"></div></div>
+                            <span class="density-value">${Math.round(density.dialogue * 100)}%</span>
+                        </div>
+                        <div class="density-item">
+                            <span class="density-label">心理</span>
+                            <div class="density-bar"><div class="density-fill psychology" style="width: ${density.psychology * 100}%"></div></div>
+                            <span class="density-value">${Math.round(density.psychology * 100)}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('progressResult').innerHTML = html;
+        }
+        
+        async function simulateProgress() {
+            const stages = [
+                { section: '开头', progress: 0.3, word_count: 80 },
+                { section: '开头', progress: 0.8, word_count: 120 },
+                { section: '中段', progress: 0.3, word_count: 300 },
+                { section: '中段', progress: 0.7, word_count: 480 },
+                { section: '结尾', progress: 0.4, word_count: 580 },
+            ];
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i >= stages.length) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                const stage = stages[i];
+                updateProgressVisual({
+                    section: stage.section,
+                    section_progress: stage.progress,
+                    word_count: stage.word_count,
+                    content_density: {
+                        narrative: 0.6 + Math.random() * 0.3,
+                        description: 0.3 + Math.random() * 0.4,
+                        dialogue: 0.2 + Math.random() * 0.3,
+                        psychology: 0.1 + Math.random() * 0.2,
+                    }
+                });
+                i++;
+            }, 800);
+        }
+        
+        async function showEmotion() {
+            const text = document.getElementById('writingInput').value;
+            
+            const negativeWords = ['不会', '太难', '不想写', '写不下去', '卡住了'];
+            const negativeCount = negativeWords.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+            
+            let level = 'normal';
+            let emoji = '😐';
+            let levelText = '状态正常';
+            let encouragement = '继续加油，写作是一个过程。';
+            
+            if (negativeCount >= 3) {
+                level = 'heavy';
+                emoji = '😣';
+                levelText = '重度挫败';
+                encouragement = '先停一下。写作卡住不代表你不行，只是需要换个入口。今天的目标是写完，不是写好。先完成，再完美。';
+            } else if (negativeCount >= 2) {
+                level = 'medium';
+                emoji = '😟';
+                levelText = '中度挫败';
+                encouragement = '卡住了很正常，我看看你已经写的...这段其实有感觉的。你已经完成一大半了，剩下的只是把它说完。';
+            } else if (negativeCount >= 1) {
+                level = 'light';
+                emoji = '😕';
+                levelText = '轻度挫败';
+                encouragement = '卡住是正常的，深呼吸一下。先写3句话试试，写完再看。';
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/enhanced/emotion/check`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_input: text,
+                        help_round: negativeCount,
+                        session_id: 'demo'
+                    })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    level = data.level;
+                    encouragement = data.encouragement;
+                }
+            } catch (e) {}
+            
+            const html = `
+                <div class="emotion-display animate-in">
+                    <div class="emotion-emoji">${emoji}</div>
+                    <div class="emotion-level emotion-${level}">${levelText}</div>
+                    <div class="emotion-text">${encouragement}</div>
+                    ${negativeCount > 0 ? `<div style="margin-top: 12px; font-size: 12px; color: #999;">检测到 ${negativeCount} 个负面信号</div>` : ''}
+                </div>
+            `;
+            document.getElementById('emotionResult').innerHTML = html;
+        }
+        
+        async function loadTraining() {
+            try {
+                const res = await fetch(`${API_BASE}/api/enhanced/training/daily`);
+                const data = await res.json();
+                
+                const html = `
+                    <div class="training-card animate-in">
+                        <div class="title">🎯 ${data.title}</div>
+                        <div class="task">${data.task}</div>
+                        <div class="constraints">
+                            ${data.constraints.map(c => `<span class="constraint-tag">${c}</span>`).join('')}
+                        </div>
+                        <div class="hint">💡 ${data.hint}</div>
+                        ${data.example ? `<div style="margin-top: 12px; padding: 12px; background: white; border-radius: 8px; font-size: 13px; color: #666; font-style: italic;">示例：${data.example}</div>` : ''}
+                    </div>
+                    <div style="margin-top: 12px; text-align: center;">
+                        <span style="font-size: 13px; color: #666;">难度：${'⭐'.repeat(data.difficulty)} | 时长：${data.duration}分钟</span>
+                    </div>
+                `;
+                document.getElementById('trainingResult').innerHTML = html;
+                
+                const skillsRes = await fetch(`${API_BASE}/api/enhanced/training/skills`);
+                const skillsData = await skillsRes.json();
+                
+                const skillsHtml = `
+                    <div class="skills-grid animate-in" style="margin-top: 16px;">
+                        ${Object.entries(skillsData).map(([name, info]) => `
+                            <div class="skill-item">
+                                <div class="skill-name">${name}</div>
+                                <span class="skill-level ${info.level}">${info.label}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                document.getElementById('trainingResult').innerHTML += skillsHtml;
+                
+            } catch (e) {
+                console.error(e);
+                document.getElementById('trainingResult').innerHTML = '<p style="color: #e53e3e;">加载失败</p>';
+            }
+        }
+        
+        async function generateReview() {
+            const reviewData = {
+                summary: {
+                    total_duration: 38,
+                    total_words: 680,
+                    stuck_count: 3,
+                    resolved_count: 3,
+                    resolution_rate: 1.0,
+                    avg_help_rounds: 1.7,
+                    independent_ratio: 0.85,
+                },
+                stuck_analysis: {
+                    records: [
+                        { time: '12:15', type: '情节推进卡', help_rounds: 1, resolved: true },
+                        { time: '12:28', type: '细节展开卡', help_rounds: 2, resolved: true },
+                        { time: '12:42', type: '结尾收束卡', help_rounds: 2, resolved: true },
+                    ],
+                    type_distribution: { '情节推进卡': 1, '细节展开卡': 1, '结尾收束卡': 1 },
+                },
+                timeline: [
+                    { time: '开始', type: 'start', content: '开始写作' },
+                    { time: '12:15', type: 'stuck', content: '卡壳：情节推进卡（求助1轮）', resolved: true },
+                    { time: '12:28', type: 'stuck', content: '卡壳：细节展开卡（求助2轮）', resolved: true },
+                    { time: '12:42', type: 'stuck', content: '卡壳：结尾收束卡（求助2轮）', resolved: true },
+                    { time: '12:50', type: 'end', content: '完成写作（680字）' },
+                ],
+                emotion_summary: { status: 'stable', events: [] },
+                ability_analysis: {
+                    strongest: '情节设计',
+                    weakest: '细节描写',
+                    next_challenge: '下次挑战：加入一段感官描写',
+                },
+                achievements: [
+                    '完成680字写作',
+                    '克服3次卡壳',
+                    '专注写作38分钟',
+                ],
+                suggested_training: '感官聚焦训练',
+            };
+            
+            const html = `
+                <div class="review-grid animate-in">
+                    <div class="review-item">
+                        <div class="review-value">${reviewData.summary.total_duration}分</div>
+                        <div class="review-label">写作时长</div>
+                    </div>
+                    <div class="review-item">
+                        <div class="review-value">${reviewData.summary.total_words}</div>
+                        <div class="review-label">总字数</div>
+                    </div>
+                    <div class="review-item">
+                        <div class="review-value">${Math.round(reviewData.summary.independent_ratio * 100)}%</div>
+                        <div class="review-label">自主写作</div>
+                    </div>
+                    <div class="review-item">
+                        <div class="review-value">${reviewData.summary.resolved_count}/${reviewData.summary.stuck_count}</div>
+                        <div class="review-label">卡壳解决</div>
+                    </div>
+                </div>
+                
+                <div class="timeline" style="margin-top: 20px;">
+                    <h3 style="font-size: 16px; color: #333; margin-bottom: 12px;">⏱️ 写作时间轴</h3>
+                    ${reviewData.timeline.map(item => `
+                        <div class="timeline-item ${item.type} ${item.resolved !== undefined ? (item.resolved ? 'resolved' : 'stuck') : ''}">
+                            <span class="timeline-time">${item.time}</span>
+                            <span class="timeline-content">${item.content}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div style="margin-top: 20px; padding: 16px; background: #f0fff4; border-radius: 12px;">
+                    <h3 style="font-size: 16px; color: #333; margin-bottom: 12px;">🏆 本次成就</h3>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        ${reviewData.achievements.map(a => `
+                            <span style="padding: 6px 14px; background: #c6f6d5; color: #22543d; border-radius: 16px; font-size: 13px;">${a}</span>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div style="padding: 16px; background: #f8f9fa; border-radius: 12px;">
+                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">💪 最强能力</div>
+                        <div style="font-size: 16px; font-weight: 600; color: #38a169;">${reviewData.ability_analysis.strongest}</div>
+                    </div>
+                    <div style="padding: 16px; background: #f8f9fa; border-radius: 12px;">
+                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">📈 下次挑战</div>
+                        <div style="font-size: 16px; font-weight: 600; color: #667eea;">${reviewData.ability_analysis.weakest}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 16px; padding: 16px; background: #fffaf0; border-radius: 12px;">
+                    <div style="font-size: 14px; color: #666;">
+                        💡 推荐训练：<strong style="color: #ed8936;">${reviewData.suggested_training}</strong>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('reviewResult').innerHTML = html;
+        }
+        
+        window.onload = () => {
+            analyzeWriting();
+        };
+    </script>
+</body>
+</html>
